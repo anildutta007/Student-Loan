@@ -7,6 +7,9 @@ import PaymentChart from '@components/charts/PaymentChart'
 import TimelineChart from '@components/charts/TimelineChart'
 import TotalPaidChart from '@components/charts/TotalPaidChart'
 import BalanceChart from '@components/charts/BalanceChart'
+import InterestAccrualChart from '@components/charts/InterestAccrualChart'
+import InterestBreakdownChart from '@components/charts/InterestBreakdownChart'
+import InterestImpactChart from '@components/charts/InterestImpactChart'
 
 interface ScenarioComparisonProps {
   results: RepaymentOutput[]
@@ -89,19 +92,38 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
         </table>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-          <PaymentChart results={results} />
+      {/* Charts - Repayment Overview */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Repayment Overview</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <PaymentChart results={results} />
+          </div>
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <TimelineChart results={results} />
+          </div>
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <TotalPaidChart results={results} />
+          </div>
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <BalanceChart results={results} />
+          </div>
         </div>
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-          <TimelineChart results={results} />
-        </div>
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-          <TotalPaidChart results={results} />
-        </div>
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-          <BalanceChart results={results} />
+      </div>
+
+      {/* Charts - Interest Analysis */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Interest Analysis</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <InterestAccrualChart results={results} />
+          </div>
+          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+            <InterestBreakdownChart results={results} totalLoan={totalLoan} />
+          </div>
+          <div className="p-4 bg-white border border-gray-200 rounded-lg md:col-span-2">
+            <InterestImpactChart results={results} totalLoan={totalLoan} />
+          </div>
         </div>
       </div>
 
