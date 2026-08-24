@@ -96,7 +96,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
 
             <div className="flex justify-between items-center p-4 bg-blue-900 text-white rounded-lg font-semibold text-lg">
               <p>Total</p>
-              <p>{formatCurrency(totalLoan)}</p>
+              <p>{formatCurrency(displayTotal)}</p>
             </div>
           </div>
         </div>
