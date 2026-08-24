@@ -56,12 +56,12 @@ export function useCalculations() {
       setError(null)
 
       // Prepare loan input
+      // UK student loan = Tuition + Maintenance Allowance (no accommodation)
       const loanInput: LoanInput = {
         yearsOfStudy: userInput.yearsOfStudy,
         annualTuition:
           userInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
-        annualLiving:
-          userInput.annualLiving ?? ACCOMMODATION_ESTIMATES.MID,
+        annualLiving: 0, // UK loan doesn't cover accommodation/living
         maintenanceAllowance: userInput.maintenanceAllowance,
       }
 

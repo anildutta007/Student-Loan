@@ -21,15 +21,13 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
   onBack,
 }) => {
   const annualTuition = UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL
-  const annualLiving = ACCOMMODATION_ESTIMATES.MID
   const annualMaintenance = userInput.maintenanceAllowance
 
   const tuitionTotal = annualTuition * userInput.yearsOfStudy
-  const livingTotal = annualLiving * userInput.yearsOfStudy
   const maintenanceTotal = annualMaintenance * userInput.yearsOfStudy
 
-  // Calculate total locally if not provided
-  const calculatedTotal = tuitionTotal + livingTotal + maintenanceTotal
+  // UK student loan = Tuition + Maintenance Allowance (NO accommodation/living costs)
+  const calculatedTotal = tuitionTotal + maintenanceTotal
   const displayTotal = totalLoan > 0 ? totalLoan : calculatedTotal
 
   return (
@@ -68,18 +66,6 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
               </p>
             </div>
 
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-              <div>
-                <p className="font-medium text-gray-900">Accommodation & Living</p>
-                <p className="text-sm text-gray-600">
-                  {formatCurrency(annualLiving)} × {userInput.yearsOfStudy} years
-                </p>
-              </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(livingTotal)}
-              </p>
-            </div>
-
             {annualMaintenance > 0 && (
               <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div>
@@ -102,15 +88,10 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
         </div>
 
         {/* Information */}
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm text-amber-900">
-            <strong>⚠️ Please Note:</strong> These are estimates based on standard England tuition fees and typical living costs. Actual costs may vary depending on:
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-900">
+            <strong>ℹ️ About Student Loans:</strong> The UK student loan covers tuition fees and (if eligible) maintenance allowance. It does NOT cover accommodation and living costs - those must be covered separately through parental contribution, work, or savings.
           </p>
-          <ul className="text-sm text-amber-900 mt-2 ml-4 list-disc space-y-1">
-            <li>Specific university and location</li>
-            <li>Accommodation type (halls, private, home)</li>
-            <li>Personal spending habits</li>
-          </ul>
         </div>
 
         {/* Confirm Checkbox */}
