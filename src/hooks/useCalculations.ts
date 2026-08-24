@@ -32,7 +32,13 @@ export function useCalculations() {
   const submitStep1 = useCallback((input: UserInput) => {
     try {
       setError(null)
-      setUserInput(input)
+      // Ensure numeric values are actually numbers (HTML forms return strings)
+      const normalizedInput: UserInput = {
+        status: input.status,
+        yearsOfStudy: typeof input.yearsOfStudy === 'string' ? parseInt(input.yearsOfStudy, 10) : input.yearsOfStudy,
+        maintenanceAllowance: typeof input.maintenanceAllowance === 'string' ? parseInt(input.maintenanceAllowance, 10) : input.maintenanceAllowance,
+      }
+      setUserInput(normalizedInput)
       setStep(2)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -66,11 +72,20 @@ export function useCalculations() {
       }
 
       // Calculate total loan
-      const total =
-        (loanInput.annualTuition +
-          loanInput.annualLiving +
-          loanInput.maintenanceAllowance) *
-        loanInput.yearsOfStudy
+      const annualCost = loanInput.annualTuition +
+        loanInput.annualLiving +
+        loanInput.maintenanceAllowance
+      const total = annualCost * loanInput.yearsOfStudy
+
+      // Debug logging
+      console.log('Loan Calculation Debug:', {
+        annualTuition: loanInput.annualTuition,
+        annualLiving: loanInput.annualLiving,
+        maintenanceAllowance: loanInput.maintenanceAllowance,
+        yearsOfStudy: loanInput.yearsOfStudy,
+        annualCost,
+        total,
+      })
 
       setTotalLoan(total)
 
