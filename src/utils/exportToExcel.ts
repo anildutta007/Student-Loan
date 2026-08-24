@@ -123,20 +123,38 @@ function addScenarioSheet(
       'Repayable Income',
       'Annual Payment',
       'Monthly Payment',
+      'Interest Charged (6%)',
       'Cumulative Paid',
       'Loan Balance',
-      'Interest %',
+      'Interest Rate %',
     ],
   ]
 
   // Add timeline data
   const REPAYMENT_THRESHOLD = UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD
   const REPAYMENT_RATE = UK_LOAN_SYSTEM.REPAYMENT_RATE
+  const INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE
 
-  result.repaymentTimeline.forEach((yearData) => {
+  // Calculate balance at start of each year to show interest
+  let balanceAtYearStart = result.repaymentTimeline[0]?.loanBalance || 0
+  if (result.repaymentTimeline.length > 0) {
+    const firstYear = result.repaymentTimeline[0]
+    const firstPayment = firstYear.monthlyPayment * 12
+    balanceAtYearStart = Math.round((firstYear.loanBalance + firstPayment) / (1 + INTEREST_RATE))
+  }
+
+  result.repaymentTimeline.forEach((yearData, index) => {
     const repayableIncome = Math.max(0, yearData.salary - REPAYMENT_THRESHOLD)
     const annualPayment = yearData.monthlyPayment * 12
-    const interestPercent = REPAYMENT_RATE * 100
+
+    // Calculate interest charged in this year
+    let interestCharged = 0
+    let balanceBeforePayment = yearData.loanBalance + annualPayment
+    if (index > 0) {
+      interestCharged = Math.round(balanceBeforePayment * INTEREST_RATE * 100) / 100
+    }
+
+    const interestPercent = INTEREST_RATE * 100
 
     sheetData.push([
       yearData.year,
@@ -144,6 +162,7 @@ function addScenarioSheet(
       formatCurrency(repayableIncome),
       formatCurrency(annualPayment),
       formatCurrency(yearData.monthlyPayment),
+      formatCurrency(interestCharged),
       formatCurrency(yearData.totalPaid),
       formatCurrency(yearData.loanBalance),
       `${interestPercent.toFixed(1)}%`,
@@ -161,14 +180,15 @@ function addScenarioSheet(
 
   // Format column widths
   ws['!cols'] = [
-    { wch: 8 },
-    { wch: 14 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 12 },
+    { wch: 8 },    // Year
+    { wch: 14 },   // Salary
+    { wch: 16 },   // Repayable Income
+    { wch: 16 },   // Annual Payment
+    { wch: 16 },   // Monthly Payment
+    { wch: 18 },   // Interest Charged
+    { wch: 16 },   // Cumulative Paid
+    { wch: 16 },   // Loan Balance
+    { wch: 14 },   // Interest Rate %
   ]
 
   // Format number columns

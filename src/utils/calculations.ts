@@ -54,14 +54,24 @@ export function buildRepaymentTimeline(
   const timeline: YearData[] = []
   let currentBalance = totalLoan
   let cumulativePaid = 0
+  const INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE // RPI + 3% = ~6%
 
   for (let year = 1; year <= MAX_REPAYMENT_YEARS; year++) {
     const salary = calculateSalary(scenario, year)
     const monthlyPayment = calculateMonthlyPayment(salary)
     const annualPayment = monthlyPayment * 12
 
-    // Deduct from balance
-    currentBalance = Math.max(0, currentBalance - annualPayment)
+    // Calculate interest on current balance (charged at start of year)
+    const interestCharged = currentBalance * INTEREST_RATE
+
+    // Add interest to balance
+    currentBalance += interestCharged
+
+    // Deduct payment from balance
+    const newBalance = currentBalance - annualPayment
+    currentBalance = Math.max(0, newBalance)
+
+    // Track cumulative paid
     cumulativePaid += Math.min(annualPayment, currentBalance + annualPayment)
 
     timeline.push({
