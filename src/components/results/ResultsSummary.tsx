@@ -3,6 +3,7 @@ import type { RepaymentOutput, UserInput } from '@types/index'
 import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 import { formatCurrency, formatCurrencyDecimal } from '@utils/calculations'
+import { exportScenariosToExcel } from '@utils/exportToExcel'
 
 interface ResultsSummaryProps {
   results: RepaymentOutput[]
@@ -194,20 +195,27 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-3 justify-center flex-wrap">
+        <Button
+          variant="secondary"
+          onClick={() => exportScenariosToExcel(results, totalLoan, userInput)}
+          size="lg"
+        >
+          📊 Export to Excel
+        </Button>
         <Button
           variant="secondary"
           onClick={onReset}
           size="lg"
         >
-          🔄 Try Another Scenario
+          🔄 Try Another
         </Button>
         <Button
           variant="primary"
           onClick={() => window.print()}
           size="lg"
         >
-          🖨️ Print Results
+          🖨️ Print
         </Button>
       </div>
     </Card>
