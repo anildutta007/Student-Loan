@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "project": {
+    "name": "Student Loan Decision App",
+    "description": "UK student loan decision helper for parents and graduates",
+    "type": "web-app",
+    "platforms": ["web"],
+    "created": "2026-08-24"
+  }
+}
