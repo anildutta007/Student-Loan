@@ -28,6 +28,10 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
   const livingTotal = annualLiving * userInput.yearsOfStudy
   const maintenanceTotal = annualMaintenance * userInput.yearsOfStudy
 
+  // Calculate total locally if not provided
+  const calculatedTotal = tuitionTotal + livingTotal + maintenanceTotal
+  const displayTotal = totalLoan > 0 ? totalLoan : calculatedTotal
+
   return (
     <Card>
       <div className="mb-6">
@@ -44,7 +48,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
         <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900 mb-2">Total Loan Amount</p>
           <p className="text-4xl font-bold text-blue-900">
-            {formatCurrency(totalLoan)}
+            {formatCurrency(displayTotal)}
           </p>
         </div>
 

@@ -73,7 +73,10 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
                 <input
                   type="radio"
                   value={year}
-                  {...register('yearsOfStudy', { required: 'Please select years of study' })}
+                  {...register('yearsOfStudy', {
+                    required: 'Please select years of study',
+                    valueAsNumber: true
+                  })}
                   className="w-4 h-4"
                 />
                 <span className="ml-2 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-400 cursor-pointer">
@@ -101,7 +104,10 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
                 <input
                   type="radio"
                   value={option.value}
-                  {...register('maintenanceAllowance', { required: 'Please select an option' })}
+                  {...register('maintenanceAllowance', {
+                    required: 'Please select an option',
+                    valueAsNumber: true
+                  })}
                   className="mt-1 w-4 h-4"
                 />
                 <div className="ml-3 flex-1">
