@@ -3,6 +3,10 @@ import type { RepaymentOutput, UserInput } from '@types/index'
 import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 import { formatCurrency, formatCurrencyDecimal } from '@utils/calculations'
+import PaymentChart from '@components/charts/PaymentChart'
+import TimelineChart from '@components/charts/TimelineChart'
+import TotalPaidChart from '@components/charts/TotalPaidChart'
+import BalanceChart from '@components/charts/BalanceChart'
 
 interface ScenarioComparisonProps {
   results: RepaymentOutput[]
@@ -85,23 +89,19 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
         </table>
       </div>
 
-      {/* Placeholder for Charts */}
+      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="p-6 bg-gray-100 rounded-lg text-center text-gray-600">
-          <p className="text-sm">📊 Chart 1: Monthly Payment Over Time</p>
-          <p className="text-xs mt-2">(Graph component coming soon)</p>
+        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <PaymentChart results={results} />
         </div>
-        <div className="p-6 bg-gray-100 rounded-lg text-center text-gray-600">
-          <p className="text-sm">📊 Chart 2: Repayment Timeline</p>
-          <p className="text-xs mt-2">(Graph component coming soon)</p>
+        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <TimelineChart results={results} />
         </div>
-        <div className="p-6 bg-gray-100 rounded-lg text-center text-gray-600">
-          <p className="text-sm">📊 Chart 3: Total Amount Paid</p>
-          <p className="text-xs mt-2">(Graph component coming soon)</p>
+        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <TotalPaidChart results={results} />
         </div>
-        <div className="p-6 bg-gray-100 rounded-lg text-center text-gray-600">
-          <p className="text-sm">📊 Chart 4: Loan Balance Over Time</p>
-          <p className="text-xs mt-2">(Graph component coming soon)</p>
+        <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <BalanceChart results={results} />
         </div>
       </div>
 
