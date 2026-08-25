@@ -3,19 +3,45 @@ import type {
   SalaryScenario,
   RepaymentOutput,
   YearData,
+  LivingSituation,
 } from '@types/index'
-import { UK_LOAN_SYSTEM, MAX_REPAYMENT_YEARS } from './constants'
+import { UK_LOAN_SYSTEM, MAX_REPAYMENT_YEARS, MAINTENANCE_LIMITS } from './constants'
+
+/**
+ * Calculate maintenance allowance based on household income and living situation
+ * Uses continuous taper: £1 reduction per ~£6.36 of income above £25,000
+ * With guaranteed minimum floor
+ */
+export function calculateMaintenanceAllowance(
+  householdIncome: number,
+  livingSituation: LivingSituation
+): number {
+  const limits = MAINTENANCE_LIMITS[livingSituation]
+  const { MAINTENANCE_INCOME_THRESHOLD, MAINTENANCE_TAPER_DIVISOR } = UK_LOAN_SYSTEM
+
+  // If income is at or below threshold, get maximum
+  if (householdIncome <= MAINTENANCE_INCOME_THRESHOLD) {
+    return limits.maximum
+  }
+
+  // Apply continuous taper for income above threshold
+  const incomeAboveThreshold = householdIncome - MAINTENANCE_INCOME_THRESHOLD
+  const taperReduction = incomeAboveThreshold / MAINTENANCE_TAPER_DIVISOR
+  const allowance = limits.maximum - taperReduction
+
+  // Apply guaranteed minimum floor
+  return Math.max(allowance, limits.minimum)
+}
 
 /**
  * Calculate total loan amount based on costs and years of study
  */
 export function calculateTotalLoan(input: LoanInput): number {
-  const annualCost =
-    input.annualTuition +
-    input.annualLiving +
-    input.maintenanceAllowance
+  const annualCost = input.annualTuition + input.annualMaintenanceActual
+  const totalStudyLoan = annualCost * input.yearsOfStudy
 
-  return annualCost * input.yearsOfStudy
+  // Apply parental contribution
+  return Math.max(0, totalStudyLoan - input.parentalContribution)
 }
 
 /**
@@ -46,33 +72,45 @@ export function calculateMonthlyPayment(salary: number): number {
 
 /**
  * Build repayment timeline for a scenario
+ * Includes interest accrual during study period and after graduation
  */
 export function buildRepaymentTimeline(
   totalLoan: number,
-  scenario: SalaryScenario
+  scenario: SalaryScenario,
+  yearsOfStudy: number
 ): YearData[] {
   const timeline: YearData[] = []
   let currentBalance = totalLoan
   let cumulativePaid = 0
-  const INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE // RPI + 3% = ~6%
+  let cumulativeInterest = 0
+  const REPAYMENT_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE // 4.5% (RPI)
+  const STUDY_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_DURING_STUDY // 4.5% (RPI) during study
 
   for (let year = 1; year <= MAX_REPAYMENT_YEARS; year++) {
     const salary = calculateSalary(scenario, year)
     const monthlyPayment = calculateMonthlyPayment(salary)
     const annualPayment = monthlyPayment * 12
 
-    // Calculate interest on current balance (charged at start of year)
-    const interestCharged = currentBalance * INTEREST_RATE
+    // Interest rate depends on whether still studying
+    const isStillStudying = year <= yearsOfStudy
+    const interestRate = isStillStudying ? STUDY_INTEREST_RATE : REPAYMENT_INTEREST_RATE
+
+    // Calculate interest on current balance
+    const interestCharged = currentBalance * interestRate
+    cumulativeInterest += interestCharged
 
     // Add interest to balance
     currentBalance += interestCharged
 
-    // Deduct payment from balance
-    const newBalance = currentBalance - annualPayment
-    currentBalance = Math.max(0, newBalance)
+    // Deduct payment from balance (only after graduation)
+    const actualPayment = isStillStudying ? 0 : annualPayment
+    currentBalance -= actualPayment
+    currentBalance = Math.max(0, currentBalance)
 
     // Track cumulative paid
-    cumulativePaid += Math.min(annualPayment, currentBalance + annualPayment)
+    if (actualPayment > 0) {
+      cumulativePaid += actualPayment
+    }
 
     timeline.push({
       year,
@@ -80,6 +118,8 @@ export function buildRepaymentTimeline(
       monthlyPayment: Math.round(monthlyPayment * 100) / 100,
       totalPaid: Math.round(cumulativePaid),
       loanBalance: Math.round(currentBalance),
+      interestCharged: Math.round(interestCharged),
+      cumulativeInterest: Math.round(cumulativeInterest),
     })
 
     // Stop tracking if loan is paid off
@@ -96,25 +136,24 @@ export function buildRepaymentTimeline(
  */
 export function calculateScenario(
   totalLoan: number,
-  scenario: SalaryScenario
+  scenario: SalaryScenario,
+  yearsOfStudy: number
 ): RepaymentOutput {
-  const timeline = buildRepaymentTimeline(totalLoan, scenario)
+  const timeline = buildRepaymentTimeline(totalLoan, scenario, yearsOfStudy)
 
   // Find when loan is paid off
   let yearsToRepayment = MAX_REPAYMENT_YEARS
   let totalAmountPaid = 0
+  let interestPaid = 0
 
   for (const yearData of timeline) {
     totalAmountPaid = yearData.totalPaid
+    interestPaid = yearData.cumulativeInterest
     if (yearData.loanBalance === 0) {
       yearsToRepayment = yearData.year
       break
     }
   }
-
-  // Calculate interest (total paid - original loan)
-  // Note: Can be negative if forgiven early
-  const interestPaid = totalAmountPaid - totalLoan
 
   return {
     scenario: scenario.name,
@@ -142,7 +181,7 @@ export function calculateAllScenarios(
 ): RepaymentOutput[] {
   const totalLoan = calculateTotalLoan(loanInput)
 
-  return scenarios.map(scenario => calculateScenario(totalLoan, scenario))
+  return scenarios.map(scenario => calculateScenario(totalLoan, scenario, loanInput.yearsOfStudy))
 }
 
 /**
@@ -190,12 +229,12 @@ export function validateLoanInput(input: LoanInput): string[] {
     errors.push('Annual tuition cannot be negative')
   }
 
-  if (input.annualLiving < 0) {
-    errors.push('Annual living costs cannot be negative')
+  if (input.annualMaintenanceActual < 0) {
+    errors.push('Maintenance allowance cannot be negative')
   }
 
-  if (input.maintenanceAllowance < 0) {
-    errors.push('Maintenance allowance cannot be negative')
+  if (input.parentalContribution < 0) {
+    errors.push('Parental contribution cannot be negative')
   }
 
   return errors

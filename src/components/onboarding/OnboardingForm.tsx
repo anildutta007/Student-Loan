@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
-import type { UserInput, StudentStatus } from '@types/index'
-import { YEARS_OF_STUDY_OPTIONS, MAINTENANCE_ALLOWANCE_OPTIONS } from '@utils/constants'
+import type { UserInput, LivingSituation } from '@types/index'
+import { YEARS_OF_STUDY_OPTIONS, LIVING_SITUATION_OPTIONS } from '@utils/constants'
+import { calculateMaintenanceAllowance, formatCurrency } from '@utils/calculations'
 import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 
@@ -15,11 +16,20 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
     defaultValues: {
       status: 'new',
       yearsOfStudy: 3,
-      maintenanceAllowance: 5000,
+      livingSituation: 'away-other',
+      householdIncome: 30000,
+      parentalContribution: 0,
     },
   })
 
-  const status = watch('status')
+  const livingSituation = watch('livingSituation') as LivingSituation
+  const householdIncome = watch('householdIncome')
+
+  // Calculate maintenance allowance based on inputs
+  const calculatedMaintenance = useMemo(() => {
+    if (!householdIncome || householdIncome < 0) return 0
+    return calculateMaintenanceAllowance(householdIncome, livingSituation)
+  }, [householdIncome, livingSituation])
 
   return (
     <Card>
@@ -33,39 +43,10 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Question 1: Status */}
+        {/* Question 1: Years of Study */}
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-3">
-            What is your child's current educational status?
-          </label>
-          <div className="space-y-3">
-            {[
-              { value: 'new' as const, label: 'Starting college this year', description: 'New student beginning their studies' },
-              { value: 'current' as const, label: 'Already studying at college', description: 'Currently enrolled and studying' },
-            ].map((option) => (
-              <label key={option.value} className="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
-                <input
-                  type="radio"
-                  value={option.value}
-                  {...register('status', { required: 'Please select an option' })}
-                  className="mt-1 w-4 h-4"
-                />
-                <div className="ml-3">
-                  <p className="font-medium text-gray-900">{option.label}</p>
-                  <p className="text-sm text-gray-600">{option.description}</p>
-                </div>
-              </label>
-            ))}
-          </div>
-          {errors.status && (
-            <p className="mt-2 text-sm text-red-600">{errors.status.message}</p>
-          )}
-        </div>
-
-        {/* Question 2: Years of Study */}
-        <div>
-          <label htmlFor="years" className="block text-sm font-medium text-gray-900 mb-3">
-            How many years {status === 'new' ? 'will' : 'have'} {status === 'new' ? 'they' : 'they'} study?
+            How many years will they study?
           </label>
           <div className="flex gap-2 flex-wrap">
             {YEARS_OF_STUDY_OPTIONS.map((year) => (
@@ -90,44 +71,102 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
           )}
         </div>
 
-        {/* Question 3: Maintenance Allowance */}
+        {/* Question 2: Living Situation */}
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-3">
-            Will your child receive a maintenance allowance?
+            Where will your child be living while studying?
           </label>
-          <p className="text-sm text-gray-600 mb-3">
-            (Additional money for living expenses, based on household income)
-          </p>
-          <div className="space-y-2">
-            {MAINTENANCE_ALLOWANCE_OPTIONS.map((option) => (
+          <div className="space-y-3">
+            {LIVING_SITUATION_OPTIONS.map((option) => (
               <label key={option.value} className="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
                 <input
                   type="radio"
                   value={option.value}
-                  {...register('maintenanceAllowance', {
-                    required: 'Please select an option',
-                    valueAsNumber: true
-                  })}
+                  {...register('livingSituation', { required: 'Please select living situation' })}
                   className="mt-1 w-4 h-4"
                 />
                 <div className="ml-3 flex-1">
                   <p className="font-medium text-gray-900">{option.label}</p>
-                  {option.description && (
-                    <p className="text-sm text-gray-600">{option.description}</p>
-                  )}
+                  <p className="text-sm text-gray-600">{option.description}</p>
                 </div>
               </label>
             ))}
           </div>
-          {errors.maintenanceAllowance && (
-            <p className="mt-2 text-sm text-red-600">{errors.maintenanceAllowance.message}</p>
+          {errors.livingSituation && (
+            <p className="mt-2 text-sm text-red-600">{errors.livingSituation.message}</p>
+          )}
+        </div>
+
+        {/* Question 3: Household Income */}
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-3">
+            What is your household income?
+          </label>
+          <p className="text-sm text-gray-600 mb-3">
+            This helps us calculate the maximum maintenance allowance your child is eligible for.
+          </p>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-gray-600">£</span>
+            <input
+              type="number"
+              min="0"
+              step="1000"
+              {...register('householdIncome', {
+                required: 'Please enter household income',
+                valueAsNumber: true,
+                min: { value: 0, message: 'Income cannot be negative' }
+              })}
+              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="30000"
+            />
+          </div>
+          {errors.householdIncome && (
+            <p className="mt-2 text-sm text-red-600">{errors.householdIncome.message}</p>
+          )}
+        </div>
+
+        {/* Calculated Maintenance Display */}
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-900 font-medium">Eligible Maintenance Allowance</p>
+          <p className="text-2xl font-bold text-green-900 mt-2">
+            {formatCurrency(calculatedMaintenance)}/year
+          </p>
+          <p className="text-xs text-green-800 mt-2">
+            Based on {livingSituation === 'at-home' ? 'living at home' : livingSituation === 'away-london' ? 'living in London' : 'living away from home'} and household income of {formatCurrency(householdIncome)}
+          </p>
+        </div>
+
+        {/* Question 4: Parental Contribution */}
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-3">
+            Will you be contributing any money upfront?
+          </label>
+          <p className="text-sm text-gray-600 mb-3">
+            If you're putting money toward tuition/living costs, enter the amount here to reduce the loan needed.
+          </p>
+          <div className="relative">
+            <span className="absolute left-3 top-3 text-gray-600">£</span>
+            <input
+              type="number"
+              min="0"
+              step="500"
+              {...register('parentalContribution', {
+                valueAsNumber: true,
+                min: { value: 0, message: 'Contribution cannot be negative' }
+              })}
+              className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="0"
+            />
+          </div>
+          {errors.parentalContribution && (
+            <p className="mt-2 text-sm text-red-600">{errors.parentalContribution.message}</p>
           )}
         </div>
 
         {/* Info Box */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            ℹ️ <strong>Note:</strong> These questions help us calculate your child's total loan amount. We'll then show you 4 salary scenarios with expected monthly payments.
+            ℹ️ <strong>Note:</strong> We'll calculate the total loan amount based on tuition fees (£9,250/year) plus your eligible maintenance allowance, minus any parental contribution. Then we'll show you 4 salary scenarios with expected monthly repayment amounts.
           </p>
         </div>
 

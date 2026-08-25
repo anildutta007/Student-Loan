@@ -1,16 +1,19 @@
-import type { SalaryScenario } from '@types/index'
+import type { SalaryScenario, MaintenanceLimit } from '@types/index'
 
 /**
  * UK Student Loan System Constants (Plan 2)
- * Based on 2024 rates
+ * Based on 2026/27 rates
  */
 export const UK_LOAN_SYSTEM = {
   TUITION_FEE_ANNUAL: 9250,           // Standard England fee
   REPAYMENT_THRESHOLD: 27750,         // 2024 level (indexed annually)
   REPAYMENT_RATE: 0.09,               // 9%
-  INTEREST_RATE: 0.06,                // RPI + 3% (assume 6%)
+  INTEREST_RATE: 0.045,               // RPI (4.5% for 2026/27)
+  INTEREST_DURING_STUDY: 0.045,       // Interest while studying (RPI)
   MAX_REPAYMENT_YEARS: 40,            // Forgiveness after 40 years
   GRACE_PERIOD_YEARS: 0,              // No grace period
+  MAINTENANCE_INCOME_THRESHOLD: 25000, // Income threshold for maintenance taper
+  MAINTENANCE_TAPER_DIVISOR: 6.36,    // ~£1 reduction per £6.36 of income above threshold
 } as const
 
 /**
@@ -53,31 +56,43 @@ export const DEFAULT_SCENARIOS: SalaryScenario[] = [
 ]
 
 /**
- * Accommodation cost estimates
+ * Maintenance allowance limits by living situation (2026/27)
+ * Continuous taper based on household income
  */
-export const ACCOMMODATION_ESTIMATES = {
-  LOW: 5000,      // ~£96/week
-  MID: 6000,      // ~£115/week
-  HIGH: 7000,     // ~£135/week
+export const MAINTENANCE_LIMITS: Record<string, MaintenanceLimit> = {
+  'at-home': {
+    maximum: 9118,      // Income ≤ £25,000
+    minimum: 4013,      // Guaranteed minimum (any income)
+  },
+  'away-london': {
+    maximum: 14135,     // Income ≤ £25,000
+    minimum: 7039,      // Guaranteed minimum (any income)
+  },
+  'away-other': {
+    maximum: 10830,     // Income ≤ £25,000
+    minimum: 5048,      // Guaranteed minimum (any income)
+  },
 } as const
 
 /**
- * Living expense estimates
+ * Living situation options
  */
-export const LIVING_EXPENSE_ESTIMATES = {
-  LOW: 4000,      // ~£77/week
-  MID: 5000,      // ~£96/week
-  HIGH: 6000,     // ~£115/week
-} as const
-
-/**
- * Maintenance allowance brackets (2024)
- */
-export const MAINTENANCE_ALLOWANCE_OPTIONS = [
-  { value: 0, label: 'No maintenance allowance', description: '' },
-  { value: 3000, label: 'Up to £3,000/year', description: 'Household income £25,000-£42,875' },
-  { value: 5000, label: 'Up to £5,000/year', description: 'Household income £0-£25,000' },
-  { value: 8116, label: 'Maximum £8,116/year', description: 'Full amount (rare)' },
+export const LIVING_SITUATION_OPTIONS = [
+  {
+    value: 'at-home' as const,
+    label: 'Living at home with parents',
+    description: 'Maximum £9,118/year (if eligible)',
+  },
+  {
+    value: 'away-other' as const,
+    label: 'Away from home (outside London)',
+    description: 'Maximum £10,830/year (if eligible)',
+  },
+  {
+    value: 'away-london' as const,
+    label: 'Away from home (in London)',
+    description: 'Maximum £14,135/year (if eligible)',
+  },
 ] as const
 
 /**

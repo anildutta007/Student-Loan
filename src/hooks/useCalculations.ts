@@ -3,14 +3,15 @@ import type {
   LoanInput,
   RepaymentOutput,
   UserInput,
+  LivingSituation,
 } from '@types/index'
 import {
   calculateAllScenarios,
   validateLoanInput,
+  calculateMaintenanceAllowance,
+  calculateTotalLoan,
 } from '@utils/calculations'
 import {
-  ACCOMMODATION_ESTIMATES,
-  LIVING_EXPENSE_ESTIMATES,
   UK_LOAN_SYSTEM,
   DEFAULT_SCENARIOS,
 } from '@utils/constants'
@@ -33,10 +34,20 @@ export function useCalculations() {
     try {
       setError(null)
       // Ensure numeric values are actually numbers (HTML forms return strings)
+      const calculatedMaintenance = calculateMaintenanceAllowance(
+        typeof input.householdIncome === 'string' ? parseInt(input.householdIncome, 10) : input.householdIncome,
+        input.livingSituation as LivingSituation
+      )
+
       const normalizedInput: UserInput = {
-        status: input.status,
+        status: 'new',
         yearsOfStudy: typeof input.yearsOfStudy === 'string' ? parseInt(input.yearsOfStudy, 10) : input.yearsOfStudy,
-        maintenanceAllowance: typeof input.maintenanceAllowance === 'string' ? parseInt(input.maintenanceAllowance, 10) : input.maintenanceAllowance,
+        livingSituation: input.livingSituation as LivingSituation,
+        householdIncome: typeof input.householdIncome === 'string' ? parseInt(input.householdIncome, 10) : input.householdIncome,
+        parentalContribution: typeof input.parentalContribution === 'string' ? parseInt(input.parentalContribution, 10) : input.parentalContribution,
+        annualTuition: UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
+        annualMaintenanceMax: undefined,
+        annualMaintenanceActual: calculatedMaintenance,
       }
       setUserInput(normalizedInput)
       setStep(2)
@@ -55,14 +66,12 @@ export function useCalculations() {
       setLoading(true)
       setError(null)
 
-      // Prepare loan input
-      // UK student loan = Tuition + Maintenance Allowance (no accommodation)
+      // Prepare loan input for calculations
       const loanInput: LoanInput = {
         yearsOfStudy: userInput.yearsOfStudy,
-        annualTuition:
-          userInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
-        annualLiving: 0, // UK loan doesn't cover accommodation/living
-        maintenanceAllowance: userInput.maintenanceAllowance,
+        annualTuition: userInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
+        annualMaintenanceActual: userInput.annualMaintenanceActual ?? 0,
+        parentalContribution: userInput.parentalContribution ?? 0,
       }
 
       // Validate input
@@ -71,20 +80,19 @@ export function useCalculations() {
         throw new Error(validationErrors[0])
       }
 
-      // Calculate total loan
-      const annualCost = loanInput.annualTuition +
-        loanInput.annualLiving +
-        loanInput.maintenanceAllowance
-      const total = annualCost * loanInput.yearsOfStudy
+      // Calculate total loan (includes parental contribution deduction)
+      const total = calculateTotalLoan(loanInput)
 
       // Debug logging
-      console.log('Loan Calculation Debug:', {
-        annualTuition: loanInput.annualTuition,
-        annualLiving: loanInput.annualLiving,
-        maintenanceAllowance: loanInput.maintenanceAllowance,
+      console.log('Loan Calculation Debug (2026/27):', {
         yearsOfStudy: loanInput.yearsOfStudy,
-        annualCost,
-        total,
+        annualTuition: loanInput.annualTuition,
+        annualMaintenance: loanInput.annualMaintenanceActual,
+        parentalContribution: loanInput.parentalContribution,
+        annualCost: loanInput.annualTuition + loanInput.annualMaintenanceActual,
+        totalBeforeContribution: (loanInput.annualTuition + loanInput.annualMaintenanceActual) * loanInput.yearsOfStudy,
+        totalLoanNeeded: total,
+        interestRate: UK_LOAN_SYSTEM.INTEREST_RATE,
       })
 
       setTotalLoan(total)

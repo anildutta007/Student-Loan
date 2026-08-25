@@ -1,14 +1,24 @@
 /**
  * User Input Types
  */
-export type StudentStatus = 'new' | 'current';
+export type StudentStatus = 'new';
+
+export type LivingSituation = 'at-home' | 'away-london' | 'away-other';
+
+export interface MaintenanceLimit {
+  maximum: number;
+  minimum: number;
+}
 
 export interface UserInput {
   status: StudentStatus;
   yearsOfStudy: number;
-  maintenanceAllowance: number;
+  livingSituation: LivingSituation;
+  householdIncome: number; // User's family income
+  parentalContribution: number; // Amount parent is putting upfront
   annualTuition?: number;
-  annualLiving?: number;
+  annualMaintenanceMax?: number;
+  annualMaintenanceActual?: number;
 }
 
 /**
@@ -17,8 +27,8 @@ export interface UserInput {
 export interface LoanInput {
   yearsOfStudy: number;
   annualTuition: number;
-  annualLiving: number;
-  maintenanceAllowance: number;
+  annualMaintenanceActual: number;
+  parentalContribution: number;
 }
 
 export interface SalaryScenario {
@@ -38,6 +48,8 @@ export interface YearData {
   monthlyPayment: number;
   totalPaid: number;
   loanBalance: number;
+  interestCharged: number;
+  cumulativeInterest: number;
 }
 
 /**
@@ -74,7 +86,9 @@ export interface CalculatorState {
 export interface FormState {
   status: StudentStatus | null;
   yearsOfStudy: number | null;
-  maintenanceAllowance: number | null;
+  livingSituation: LivingSituation | null;
+  householdIncome: number | null;
+  parentalContribution: number | null;
 }
 
 /**
