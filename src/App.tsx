@@ -84,6 +84,7 @@ function App() {
             results={results}
             totalLoan={totalLoan}
             userInput={userInput}
+            onBack={goBack}
             onReset={reset}
           />
         )}

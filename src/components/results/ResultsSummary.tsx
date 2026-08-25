@@ -9,6 +9,7 @@ interface ResultsSummaryProps {
   results: RepaymentOutput[]
   totalLoan: number
   userInput: UserInput
+  onBack: () => void
   onReset: () => void
 }
 
@@ -16,6 +17,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
   results,
   totalLoan,
   userInput,
+  onBack,
   onReset,
 }) => {
   const fastestRepayment = results.reduce((min, curr) =>
@@ -195,28 +197,36 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 justify-center flex-wrap">
+      <div className="flex gap-3 justify-between flex-wrap">
         <Button
           variant="secondary"
-          onClick={() => exportScenariosToExcel(results, totalLoan, userInput)}
-          size="lg"
+          onClick={onBack}
         >
-          📊 Export to Excel
+          ← Back
         </Button>
-        <Button
-          variant="secondary"
-          onClick={onReset}
-          size="lg"
-        >
-          🔄 Try Another
-        </Button>
-        <Button
-          variant="primary"
-          onClick={() => window.print()}
-          size="lg"
-        >
-          🖨️ Print
-        </Button>
+        <div className="flex gap-3 flex-wrap">
+          <Button
+            variant="secondary"
+            onClick={() => exportScenariosToExcel(results, totalLoan, userInput)}
+            size="lg"
+          >
+            📊 Export to Excel
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onReset}
+            size="lg"
+          >
+            🔄 Try Another
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => window.print()}
+            size="lg"
+          >
+            🖨️ Print
+          </Button>
+        </div>
       </div>
     </Card>
   )
