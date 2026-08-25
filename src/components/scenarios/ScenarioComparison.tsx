@@ -135,61 +135,64 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
           <ParentInvestmentChart results={results} totalLoan={totalLoan} />
         </div>
 
-        {/* Detailed Comparison Table */}
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100 border-y border-gray-200">
-                <th className="text-left p-3 font-semibold text-gray-900">Scenario</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Original Loan</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Years to Repay</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Total Loan Cost</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Investment Value (3%)</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Investment Gain</th>
-                <th className="text-right p-3 font-semibold text-gray-900">Difference</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result) => {
-                const investmentValue = totalLoan * Math.pow(1.03, result.yearsToRepayment)
-                const investmentGain = investmentValue - totalLoan
-                const difference = investmentValue - result.totalAmountPaid
-
-                return (
-                  <tr
-                    key={result.scenario}
-                    className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="p-3 font-medium text-gray-900">
-                      Student {result.scenario}
-                    </td>
-                    <td className="text-right p-3 text-gray-700">
-                      {formatCurrency(totalLoan)}
-                    </td>
-                    <td className="text-right p-3 text-gray-700">
-                      {result.yearsToRepayment} years
-                    </td>
-                    <td className="text-right p-3 text-red-700 font-semibold">
-                      {formatCurrency(result.totalAmountPaid)}
-                    </td>
-                    <td className="text-right p-3 text-green-700 font-semibold">
-                      {formatCurrency(Math.round(investmentValue))}
-                    </td>
-                    <td className="text-right p-3 text-green-600 font-semibold">
-                      {formatCurrency(Math.round(investmentGain))}
-                    </td>
-                    <td className="text-right p-3 font-semibold"
-                      style={{
-                        color: difference > 0 ? '#059669' : '#dc2626'
-                      }}>
-                      {formatCurrency(Math.round(difference))}
-                    </td>
+        {/* Detailed Comparison Tables - Multiple Growth Rates */}
+        {[0.03, 0.04, 0.05].map((rate) => (
+          <div key={rate} className="mt-6">
+            <h4 className="text-md font-semibold text-gray-900 mb-3">
+              {(rate * 100).toFixed(0)}% Annual Investment Return
+            </h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-100 border-y border-gray-200">
+                    <th className="text-left p-3 font-semibold text-gray-900">Scenario</th>
+                    <th className="text-right p-3 font-semibold text-gray-900">Loan Cost</th>
+                    <th className="text-right p-3 font-semibold text-gray-900">Years</th>
+                    <th className="text-right p-3 font-semibold text-gray-900">Investment Value</th>
+                    <th className="text-right p-3 font-semibold text-gray-900">Investment Gain</th>
+                    <th className="text-right p-3 font-semibold text-gray-900">vs Loan Cost</th>
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {results.map((result) => {
+                    const investmentValue = totalLoan * Math.pow(1 + rate, result.yearsToRepayment)
+                    const investmentGain = investmentValue - totalLoan
+                    const difference = investmentValue - result.totalAmountPaid
+
+                    return (
+                      <tr
+                        key={`${result.scenario}-${rate}`}
+                        className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="p-3 font-medium text-gray-900">
+                          Student {result.scenario}
+                        </td>
+                        <td className="text-right p-3 text-red-700 font-semibold">
+                          {formatCurrency(result.totalAmountPaid)}
+                        </td>
+                        <td className="text-right p-3 text-gray-700">
+                          {result.yearsToRepayment}
+                        </td>
+                        <td className="text-right p-3 text-blue-700 font-semibold">
+                          {formatCurrency(Math.round(investmentValue))}
+                        </td>
+                        <td className="text-right p-3 text-green-700 font-semibold">
+                          {formatCurrency(Math.round(investmentGain))}
+                        </td>
+                        <td className="text-right p-3 font-semibold"
+                          style={{
+                            color: difference > 0 ? '#059669' : '#dc2626'
+                          }}>
+                          +{formatCurrency(Math.round(difference))}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
 
         {/* Explanation */}
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
