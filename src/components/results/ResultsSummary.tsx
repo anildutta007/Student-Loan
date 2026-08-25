@@ -163,7 +163,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
         <ul className="text-sm text-blue-900 space-y-1">
           <li>
             <a
-              href="https://www.gov.uk/student-finance"
+              href="https://www.gov.uk/student-finance-england"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-blue-700"
@@ -173,22 +173,22 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
           </li>
           <li>
             <a
-              href="https://www.gov.uk/understand-student-finance"
+              href="https://www.slc.co.uk/borrowers/repayment/how-repayment-works.html"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-blue-700"
             >
-              Understanding Student Finance
+              Student Loans Company - How Repayment Works
             </a>
           </li>
           <li>
             <a
-              href="https://www.gov.uk/guidance/plan-2-student-loans"
+              href="https://www.gov.uk/guidance/plan-2-student-loans-overview"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-blue-700"
             >
-              Plan 2 Student Loans Guide
+              Plan 2 Student Loans Overview
             </a>
           </li>
         </ul>
