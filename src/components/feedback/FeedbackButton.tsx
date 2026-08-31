@@ -6,7 +6,7 @@ interface FeedbackButtonProps {
 }
 
 const FeedbackButton: React.FC<FeedbackButtonProps> = ({
-  recipientEmail = 'anil dutta007@gmail.com'
+  recipientEmail = 'anildutta007@gmail.com'
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [feedback, setFeedback] = useState('')

@@ -113,7 +113,7 @@ function App() {
       </footer>
 
       {/* Feedback Button */}
-      <FeedbackButton recipientEmail="anil dutta007@gmail.com" />
+      <FeedbackButton recipientEmail="anildutta007@gmail.com" />
     </div>
   )
 }
