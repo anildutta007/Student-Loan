@@ -18,8 +18,11 @@ async function sendEmailWithResend(data: FeedbackRequest) {
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
 
+    // Use onboarding@resend.dev for testing, or your verified domain
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+
     const result = await resend.emails.send({
-      from: 'noreply@studentloancalculator.com',
+      from: fromEmail,
       to: data.recipientEmail,
       replyTo: data.email || 'noreply@studentloancalculator.com',
       subject: `New Feedback from Student Loan Calculator`,
