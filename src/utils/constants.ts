@@ -3,11 +3,12 @@ import type { SalaryScenario, MaintenanceLimit } from '@types/index'
 /**
  * UK Student Loan System Constants (Plan 2)
  * Based on 2026/27 rates
+ * Sources: UK Government Student Finance & Universities UK
  */
 export const UK_LOAN_SYSTEM = {
-  TUITION_FEE_ANNUAL: 9250,           // Standard England fee
-  REPAYMENT_THRESHOLD: 27750,         // 2024 level (indexed annually)
-  REPAYMENT_RATE: 0.09,               // 9%
+  TUITION_FEE_ANNUAL: 9535,           // Standard England fee (2026/27) - increased from £9,250
+  REPAYMENT_THRESHOLD: 25000,         // New threshold from April 2026 (Plan 2) - reduced from £27,750
+  REPAYMENT_RATE: 0.09,               // 9% of income above threshold
   INTEREST_RATE: 0.045,               // RPI (4.5% for 2026/27)
   INTEREST_DURING_STUDY: 0.045,       // Interest while studying (RPI)
   MAX_REPAYMENT_YEARS: 40,            // Forgiveness after 40 years
