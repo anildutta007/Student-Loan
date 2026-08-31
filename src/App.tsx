@@ -7,6 +7,7 @@ import LoanSummary from '@components/summary/LoanSummary'
 import ScenarioComparison from '@components/scenarios/ScenarioComparison'
 import ResultsSummary from '@components/results/ResultsSummary'
 import ProgressBar from '@components/common/ProgressBar'
+import FeedbackButton from '@components/feedback/FeedbackButton'
 
 function App() {
   const {
@@ -110,6 +111,9 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Feedback Button */}
+      <FeedbackButton recipientEmail="anil dutta007@gmail.com" />
     </div>
   )
 }
