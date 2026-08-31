@@ -57,21 +57,27 @@ export function useCalculations() {
   }, [])
 
   /**
-   * Confirm loan summary and calculate scenarios
+   * Confirm loan summary with potential parental contribution update
    */
-  const submitStep2 = useCallback(() => {
-    if (!userInput) return
+  const submitStep2 = useCallback((updatedInput?: UserInput) => {
+    const inputToUse = updatedInput || userInput
+    if (!inputToUse) return
 
     try {
       setLoading(true)
       setError(null)
 
+      // Update userInput if it was modified on Step 2
+      if (updatedInput) {
+        setUserInput(updatedInput)
+      }
+
       // Prepare loan input for calculations
       const loanInput: LoanInput = {
-        yearsOfStudy: userInput.yearsOfStudy,
-        annualTuition: userInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
-        annualMaintenanceActual: userInput.annualMaintenanceActual ?? 0,
-        parentalContribution: userInput.parentalContribution ?? 0,
+        yearsOfStudy: inputToUse.yearsOfStudy,
+        annualTuition: inputToUse.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
+        annualMaintenanceActual: inputToUse.annualMaintenanceActual ?? 0,
+        parentalContribution: inputToUse.parentalContribution ?? 0,
       }
 
       // Validate input
@@ -110,7 +116,7 @@ export function useCalculations() {
     } finally {
       setLoading(false)
     }
-  }, [userInput])
+  }, [])
 
   /**
    * Move to results/export step

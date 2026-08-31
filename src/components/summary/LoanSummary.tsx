@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import type { UserInput } from '@types/index'
 import { UK_LOAN_SYSTEM, LIVING_SITUATION_OPTIONS } from '@utils/constants'
 import { formatCurrency } from '@utils/calculations'
@@ -9,7 +9,7 @@ interface LoanSummaryProps {
   userInput: UserInput
   totalLoan: number
   loading?: boolean
-  onConfirm: () => void
+  onConfirm: (updatedInput: UserInput) => void
   onBack: () => void
 }
 
@@ -20,13 +20,33 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
   onConfirm,
   onBack,
 }) => {
+  const [parentalContribution, setParentalContribution] = useState(userInput.parentalContribution ?? 0)
+
   const annualTuition = UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL
   const annualMaintenance = userInput.annualMaintenanceActual ?? 0
+  const maxLoanAvailable = (annualTuition + annualMaintenance) * userInput.yearsOfStudy
 
   const tuitionTotal = annualTuition * userInput.yearsOfStudy
   const maintenanceTotal = annualMaintenance * userInput.yearsOfStudy
   const subtotal = tuitionTotal + maintenanceTotal
-  const finalTotal = Math.max(0, subtotal - (userInput.parentalContribution ?? 0))
+  const finalTotal = Math.max(0, subtotal - parentalContribution)
+
+  // Calculate investment potential based on parental contribution
+  const investmentPotential = useMemo(() => {
+    if (parentalContribution <= 0) return 0
+    // Show 4% return as middle estimate
+    const years = userInput.yearsOfStudy
+    return parentalContribution * Math.pow(1.04, years)
+  }, [parentalContribution, userInput.yearsOfStudy])
+
+  const handleConfirm = () => {
+    // Update userInput with new parental contribution and call onConfirm
+    const updatedInput: UserInput = {
+      ...userInput,
+      parentalContribution,
+    }
+    onConfirm(updatedInput)
+  }
 
   // Get living situation label
   const livingLabel = LIVING_SITUATION_OPTIONS.find(
@@ -37,10 +57,10 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
     <Card>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          STEP 2 OF 4: Loan Summary
+          STEP 2 OF 4: Loan Summary & Parental Contribution
         </h2>
         <p className="text-gray-600">
-          Review your estimated loan amount for 2026/27
+          Review calculated loan costs and set parental contribution
         </p>
       </div>
 
@@ -53,7 +73,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
           </div>
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 uppercase font-semibold">Living Situation</p>
-            <p className="text-lg font-bold text-gray-900 mt-1">{livingLabel}</p>
+            <p className="text-sm font-bold text-gray-900 mt-1">{livingLabel}</p>
           </div>
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 uppercase font-semibold">Household Income</p>
@@ -61,70 +81,100 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
           </div>
         </div>
 
-        {/* Total Loan Box */}
-        <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900 mb-2">Total Loan Amount Needed</p>
-          <p className="text-4xl font-bold text-blue-900">
-            {formatCurrency(finalTotal)}
-          </p>
+        {/* Key Figures */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Max Loan Available */}
+          <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-900 font-semibold uppercase mb-2">Max Loan Available</p>
+            <p className="text-3xl font-bold text-blue-900">{formatCurrency(maxLoanAvailable)}</p>
+            <p className="text-xs text-blue-800 mt-2">Tuition + Maintenance (before contribution)</p>
+          </div>
+
+          {/* Total Loan Needed */}
+          <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg">
+            <p className="text-sm text-green-900 font-semibold uppercase mb-2">Total Loan Needed</p>
+            <p className="text-3xl font-bold text-green-900">{formatCurrency(finalTotal)}</p>
+            <p className="text-xs text-green-800 mt-2">After your contribution</p>
+          </div>
         </div>
 
         {/* Breakdown */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Calculation Breakdown</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Cost Breakdown</h3>
           <div className="space-y-3">
-            {/* Tuition */}
+            {/* Tuition (non-editable) */}
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">Tuition Fees</p>
-                <p className="text-sm text-gray-600">
-                  {formatCurrency(annualTuition)}/year × {userInput.yearsOfStudy} years
-                </p>
+                <p className="font-medium text-gray-900">Tuition Fees (2026/27)</p>
+                <p className="text-sm text-gray-600">{formatCurrency(annualTuition)}/year × {userInput.yearsOfStudy} years</p>
               </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(tuitionTotal)}
-              </p>
+              <p className="text-lg font-semibold text-gray-900">{formatCurrency(tuitionTotal)}</p>
             </div>
 
-            {/* Maintenance */}
+            {/* Maintenance (non-editable) */}
             <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div>
-                <p className="font-medium text-gray-900">Maintenance Allowance</p>
-                <p className="text-sm text-gray-600">
-                  {formatCurrency(annualMaintenance)}/year × {userInput.yearsOfStudy} years
-                </p>
+                <p className="font-medium text-gray-900">Maintenance Allowance (eligible)</p>
+                <p className="text-sm text-gray-600">{formatCurrency(annualMaintenance)}/year × {userInput.yearsOfStudy} years</p>
               </div>
-              <p className="text-lg font-semibold text-gray-900">
-                {formatCurrency(maintenanceTotal)}
-              </p>
+              <p className="text-lg font-semibold text-gray-900">{formatCurrency(maintenanceTotal)}</p>
             </div>
 
             {/* Subtotal */}
-            <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-lg font-semibold">
-              <p>Subtotal (before parental contribution)</p>
-              <p>{formatCurrency(subtotal)}</p>
+            <div className="flex justify-between items-center p-3 bg-gray-100 border border-gray-300 rounded-lg font-semibold">
+              <p className="text-gray-900">Subtotal (Max Loan)</p>
+              <p className="text-gray-900">{formatCurrency(subtotal)}</p>
             </div>
 
-            {/* Parental Contribution */}
-            {(userInput.parentalContribution ?? 0) > 0 && (
-              <div className="flex justify-between items-center p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">Parental Contribution</p>
-                  <p className="text-sm text-gray-600">Reducing loan amount</p>
-                </div>
-                <p className="text-lg font-semibold text-purple-900">
-                  -{formatCurrency(userInput.parentalContribution)}
-                </p>
+            {/* Parental Contribution (EDITABLE) */}
+            <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+              <label className="block text-sm font-semibold text-purple-900 mb-3">
+                💰 Your Parental Contribution (Editable)
+              </label>
+              <div className="relative mb-3">
+                <span className="absolute left-3 top-3 text-gray-600 text-lg">£</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="500"
+                  max={maxLoanAvailable}
+                  value={parentalContribution}
+                  onChange={(e) => setParentalContribution(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-full pl-8 pr-4 py-2 border border-purple-300 rounded-lg text-lg font-semibold focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
               </div>
-            )}
+              <p className="text-xs text-purple-800">
+                Maximum available: {formatCurrency(maxLoanAvailable)}
+              </p>
+            </div>
 
-            {/* Total Loan */}
-            <div className="flex justify-between items-center p-4 bg-blue-900 text-white rounded-lg font-semibold text-lg">
-              <p>Total Loan Needed</p>
-              <p>{formatCurrency(finalTotal)}</p>
+            {/* Final Total */}
+            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg font-semibold text-lg">
+              <p>Final Loan Amount Needed</p>
+              <p className="text-2xl">{formatCurrency(finalTotal)}</p>
             </div>
           </div>
         </div>
+
+        {/* Investment Potential */}
+        {parentalContribution > 0 && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <h3 className="font-semibold text-amber-900 mb-2">📊 Investment Alternative (4% annual return)</h3>
+            <div className="grid grid-cols-2 gap-4 mt-3">
+              <div>
+                <p className="text-xs text-amber-800 uppercase">Amount Invested</p>
+                <p className="text-xl font-bold text-amber-900">{formatCurrency(parentalContribution)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-amber-800 uppercase">After {userInput.yearsOfStudy} years</p>
+                <p className="text-xl font-bold text-amber-900">{formatCurrency(investmentPotential)}</p>
+              </div>
+            </div>
+            <p className="text-xs text-amber-800 mt-3">
+              If this amount was invested at 4% annual return instead of paying toward the loan upfront.
+            </p>
+          </div>
+        )}
 
         {/* Information */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
@@ -151,6 +201,13 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
           </span>
         </label>
 
+        {/* Info Box */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-900">
+            <strong>ℹ️ How this works:</strong> The tuition fee and eligible maintenance allowance are calculated based on 2026/27 rates and your situation. You can adjust your parental contribution to see how it reduces the loan amount needed. Investment potential shows what your contribution could grow to if invested at 4% annually over your study period.
+          </p>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex justify-between gap-3">
           <Button
@@ -161,7 +218,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
           </Button>
           <Button
             loading={loading}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             size="lg"
           >
             Next: View Scenarios →
