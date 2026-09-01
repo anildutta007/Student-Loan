@@ -6,6 +6,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.0.0",
     "html2pdf.js": "^0.10.1",
     "react": "^18.2.0",
