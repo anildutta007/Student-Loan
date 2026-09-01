@@ -1,12 +1,26 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import type { RepaymentOutput, UserInput } from '@types/index'
 import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 import { formatCurrency, formatCurrencyDecimal } from '@utils/calculations'
 import { exportScenariosToExcel } from '@utils/exportToExcel'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts'
 
 interface ResultsSummaryProps {
   results: RepaymentOutput[]
+  fullLoanResults?: RepaymentOutput[] | null
   totalLoan: number
   userInput: UserInput
   onBack: () => void
@@ -15,18 +29,128 @@ interface ResultsSummaryProps {
 
 const ResultsSummary: React.FC<ResultsSummaryProps> = ({
   results,
+  fullLoanResults,
   totalLoan,
   userInput,
   onBack,
   onReset,
 }) => {
-  const fastestRepayment = results.reduce((min, curr) =>
+  const hasParentalContribution = (userInput.parentalContribution ?? 0) > 0
+
+  // Calculate key metrics
+  const reducedLoanFastest = results.reduce((min, curr) =>
     curr.yearsToRepayment < min.yearsToRepayment ? curr : min
   )
 
-  const lowestCost = results.reduce((min, curr) =>
-    curr.totalAmountPaid < min.totalAmountPaid ? curr : min
-  )
+  const fullLoanFastest = fullLoanResults?.[0] ? fullLoanResults.reduce((min, curr) =>
+    curr.yearsToRepayment < min.yearsToRepayment ? curr : min
+  ) : null
+
+  // Prepare comparison data for charts
+  const monthlyPaymentData = useMemo(() => {
+    if (!results[0]?.repaymentTimeline) return []
+
+    const data: any[] = []
+    const timeline = results[0].repaymentTimeline
+    const fullTimeline = fullLoanResults?.[0]?.repaymentTimeline || []
+
+    for (let i = 0; i < Math.min(timeline.length, 35); i++) {
+      const point: any = {
+        year: i + 1,
+        'With Contribution': Math.round(timeline[i]?.monthlyPayment * 100) / 100,
+      }
+      if (hasParentalContribution && fullTimeline[i]) {
+        point['Without Contribution'] = Math.round(fullTimeline[i].monthlyPayment * 100) / 100
+      }
+      data.push(point)
+    }
+    return data
+  }, [results, fullLoanResults, hasParentalContribution])
+
+  // Total Amount Paid comparison
+  const totalAmountPaidData = useMemo(() => {
+    const data: any[] = []
+    results.forEach((result, idx) => {
+      const fullResult = fullLoanResults?.[idx]
+      const point: any = {
+        scenario: `Student ${result.scenario}`,
+        'With Contribution': result.totalAmountPaid,
+      }
+      if (hasParentalContribution && fullResult) {
+        point['Without Contribution'] = fullResult.totalAmountPaid
+        point['Savings'] = fullResult.totalAmountPaid - result.totalAmountPaid
+      }
+      data.push(point)
+    })
+    return data
+  }, [results, fullLoanResults, hasParentalContribution])
+
+  // Interest vs Principal comparison
+  const interestPrincipalData = useMemo(() => {
+    const data: any[] = []
+    results.forEach((result, idx) => {
+      const fullResult = fullLoanResults?.[idx]
+      const principal = result.repaymentTimeline[0]?.loanBalance || totalLoan
+      const interest = result.interestPaid
+
+      const point: any = {
+        scenario: `Student ${result.scenario}`,
+        'Principal (Reduced)': principal,
+        'Interest (Reduced)': interest,
+      }
+
+      if (hasParentalContribution && fullResult) {
+        const fullPrincipal = fullResult.repaymentTimeline[0]?.loanBalance || (totalLoan + (userInput.parentalContribution || 0))
+        const fullInterest = fullResult.interestPaid
+        point['Principal (Full Loan)'] = fullPrincipal
+        point['Interest (Full Loan)'] = fullInterest
+      }
+      data.push(point)
+    })
+    return data
+  }, [results, fullLoanResults, hasParentalContribution, totalLoan, userInput.parentalContribution])
+
+  // Loan Balance comparison
+  const loanBalanceData = useMemo(() => {
+    if (!results[0]?.repaymentTimeline) return []
+
+    const data: any[] = []
+    const timeline = results[0].repaymentTimeline
+    const fullTimeline = fullLoanResults?.[0]?.repaymentTimeline || []
+
+    for (let i = 0; i < Math.min(timeline.length, 35); i++) {
+      const point: any = {
+        year: i + 1,
+        'With Contribution': Math.max(0, timeline[i]?.loanBalance || 0),
+      }
+      if (hasParentalContribution && fullTimeline[i]) {
+        point['Without Contribution'] = Math.max(0, fullTimeline[i].loanBalance || 0)
+      }
+      data.push(point)
+    }
+    return data
+  }, [results, fullLoanResults, hasParentalContribution])
+
+  // Investment comparison (if parental contribution exists)
+  const investmentData = useMemo(() => {
+    if (!hasParentalContribution || !results[0]?.repaymentTimeline) return []
+
+    const contribution = userInput.parentalContribution || 0
+    const yearsToRepay = results[0].yearsToRepayment
+    const data: any[] = []
+
+    for (let year = 1; year <= yearsToRepay && year <= 40; year++) {
+      const point: any = {
+        year,
+        'Loan Savings': contribution * (year / yearsToRepay),
+        '3% Growth': contribution * Math.pow(1.03, year),
+        '4% Growth': contribution * Math.pow(1.04, year),
+        '5% Growth': contribution * Math.pow(1.05, year),
+      }
+      data.push(point)
+    }
+    return data
+  }, [results, hasParentalContribution, userInput.parentalContribution])
 
   return (
     <Card>
@@ -35,196 +159,266 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
           STEP 4 OF 4: Your Results
         </h2>
         <p className="text-gray-600">
-          Summary of your child's expected loan repayment scenarios
+          {hasParentalContribution
+            ? `Impact of your £${userInput.parentalContribution?.toLocaleString()} contribution`
+            : 'Summary of your child\'s expected loan repayment scenarios'
+          }
         </p>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg">
-          <p className="text-xs text-blue-900 font-medium uppercase tracking-wide">Total Loan</p>
+          <p className="text-xs text-blue-900 font-medium uppercase tracking-wide">Loan (with contribution)</p>
           <p className="text-2xl font-bold text-blue-900 mt-2">{formatCurrency(totalLoan)}</p>
         </div>
 
-        <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg">
-          <p className="text-xs text-green-900 font-medium uppercase tracking-wide">
-            Fastest Payoff
-          </p>
-          <p className="text-2xl font-bold text-green-900 mt-2">
-            {fastestRepayment.yearsToRepayment} years
-          </p>
-          <p className="text-xs text-green-800 mt-1">Student {fastestRepayment.scenario}</p>
-        </div>
-      </div>
-
-      {/* Key Insights */}
-      <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg mb-6">
-        <h3 className="font-semibold text-purple-900 mb-3">📊 Key Insights</h3>
-        <ul className="space-y-2 text-sm text-purple-900">
-          <li className="flex gap-2">
-            <span>✓</span>
-            <span>
-              <strong>Repayment Timeline:</strong> Ranges from {fastestRepayment.yearsToRepayment} years (Student {fastestRepayment.scenario}) to {results.reduce((max, curr) =>
-                curr.yearsToRepayment > max.yearsToRepayment ? curr : max
-              ).yearsToRepayment} years (Student {results.reduce((max, curr) =>
-                curr.yearsToRepayment > max.yearsToRepayment ? curr : max
-              ).scenario})
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span>✓</span>
-            <span>
-              <strong>Monthly Payments:</strong> Start from {formatCurrencyDecimal(
-                Math.min(...results.map(r => r.firstYearMonthlyPayment))
-              )}/month to {formatCurrencyDecimal(
-                Math.max(...results.map(r => r.firstYearMonthlyPayment))
-              )}/month
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span>✓</span>
-            <span>
-              <strong>Lifetime Cost:</strong> Total repayment ranges from {formatCurrency(
-                lowestCost.totalAmountPaid
-              )} to {formatCurrency(
-                Math.max(...results.map(r => r.totalAmountPaid))
-              )}
-            </span>
-          </li>
-          <li className="flex gap-2">
-            <span>✓</span>
-            <span>
-              <strong>Career Impact:</strong> Higher starting salaries lead to faster loan repayment and financial freedom sooner
-            </span>
-          </li>
-        </ul>
-      </div>
-
-      {/* Detailed Results Table */}
-      <div className="mb-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Detailed Scenario Breakdown</h3>
-        <div className="space-y-3">
-          {results.map((result) => (
-            <div
-              key={result.scenario}
-              className="p-4 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
-              style={{ borderLeftColor: result.color, borderLeftWidth: '4px' }}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{result.label}</h4>
-                  <p className="text-sm text-gray-600">
-                    Starting Salary: {formatCurrency(result.startingSalary)}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                <div>
-                  <p className="text-gray-600">Year 1 Payment</p>
-                  <p className="font-semibold text-gray-900">
-                    {formatCurrencyDecimal(result.firstYearMonthlyPayment)}/mo
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Years to Repay</p>
-                  <p className="font-semibold text-gray-900">{result.yearsToRepayment} yrs</p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Total Paid</p>
-                  <p className="font-semibold text-gray-900">
-                    {formatCurrency(result.totalAmountPaid)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-600">Interest</p>
-                  <p className="font-semibold text-gray-900">
-                    {result.interestPaid > 0 ? '+' : ''}{formatCurrency(result.interestPaid)}
-                  </p>
-                </div>
-              </div>
+        {hasParentalContribution && (
+          <>
+            <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg">
+              <p className="text-xs text-green-900 font-medium uppercase tracking-wide">Full Loan (no contribution)</p>
+              <p className="text-2xl font-bold text-green-900 mt-2">
+                {formatCurrency(totalLoan + (userInput.parentalContribution || 0))}
+              </p>
             </div>
-          ))}
+
+            <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg">
+              <p className="text-xs text-purple-900 font-medium uppercase tracking-wide">Your Contribution</p>
+              <p className="text-2xl font-bold text-purple-900 mt-2">
+                {formatCurrency(userInput.parentalContribution || 0)}
+              </p>
+            </div>
+
+            <div className="p-4 bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-lg">
+              <p className="text-xs text-amber-900 font-medium uppercase tracking-wide">Savings vs full loan</p>
+              <p className="text-2xl font-bold text-amber-900 mt-2">
+                {formatCurrency((fullLoanResults?.[0]?.totalAmountPaid || 0) - (results[0]?.totalAmountPaid || 0))}
+              </p>
+            </div>
+          </>
+        )}
+
+        <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg">
+          <p className="text-xs text-green-900 font-medium uppercase tracking-wide">Fastest Payoff</p>
+          <p className="text-2xl font-bold text-green-900 mt-2">
+            {reducedLoanFastest.yearsToRepayment} years
+          </p>
+          <p className="text-xs text-green-800 mt-1">Student {reducedLoanFastest.scenario}</p>
         </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="space-y-8">
+        {/* 1. Monthly Payment Over Time */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Monthly Payment Over Time</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyPaymentData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
+              <YAxis label={{ value: 'Monthly Payment (£)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(value) => formatCurrencyDecimal(value as number)} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="With Contribution"
+                stroke="#3b82f6"
+                dot={false}
+                strokeWidth={2}
+              />
+              {hasParentalContribution && (
+                <Line
+                  type="monotone"
+                  dataKey="Without Contribution"
+                  stroke="#ef4444"
+                  dot={false}
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                />
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="text-sm text-gray-600 mt-3">
+            Shows monthly payment increasing with salary growth (5% annually).
+            {hasParentalContribution && ' Red dashed line shows impact of full loan without contribution.'}
+          </p>
+        </div>
+
+        {/* 2. Total Amount Paid */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Total Amount Paid by Scenario</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={totalAmountPaidData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="scenario" />
+              <YAxis label={{ value: 'Total Paid (£)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(value) => formatCurrency(value as number)} />
+              <Legend />
+              <Bar dataKey="With Contribution" fill="#3b82f6" />
+              {hasParentalContribution && (
+                <>
+                  <Bar dataKey="Without Contribution" fill="#ef4444" />
+                  <Bar dataKey="Savings" fill="#10b981" />
+                </>
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="text-sm text-gray-600 mt-3">
+            Total repayment over the entire loan term.
+            {hasParentalContribution && ' Green bar shows how much less you\'ll pay with your contribution.'}
+          </p>
+        </div>
+
+        {/* 3. Interest vs Principal Comparison */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔀 Interest vs Principal by Scenario</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={interestPrincipalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="scenario" />
+              <YAxis label={{ value: 'Amount (£)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(value) => formatCurrency(value as number)} />
+              <Legend />
+              <Bar dataKey="Principal (Reduced)" stackId="a" fill="#3b82f6" />
+              <Bar dataKey="Interest (Reduced)" stackId="a" fill="#f59e0b" />
+              {hasParentalContribution && (
+                <>
+                  <Bar dataKey="Principal (Full Loan)" stackId="b" fill="#93c5fd" />
+                  <Bar dataKey="Interest (Full Loan)" stackId="b" fill="#fde047" />
+                </>
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="text-sm text-gray-600 mt-3">
+            Stacked view showing principal (loan amount) vs interest charged.
+            {hasParentalContribution && ' Lighter colors show comparison with full loan.'}
+          </p>
+        </div>
+
+        {/* 4. Loan Balance Over Time */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📉 Loan Balance Over Time</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={loanBalanceData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
+              <YAxis label={{ value: 'Outstanding Balance (£)', angle: -90, position: 'insideLeft' }} />
+              <Tooltip formatter={(value) => formatCurrency(value as number)} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="With Contribution"
+                stroke="#10b981"
+                dot={false}
+                strokeWidth={2}
+              />
+              {hasParentalContribution && (
+                <Line
+                  type="monotone"
+                  dataKey="Without Contribution"
+                  stroke="#ef4444"
+                  dot={false}
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                />
+              )}
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="text-sm text-gray-600 mt-3">
+            Shows how the loan balance decreases as payments are made. Loan is forgiven if unpaid after 40 years.
+            {hasParentalContribution && ' Red dashed line shows faster accumulation during study with full loan.'}
+          </p>
+        </div>
+
+        {/* 5. Investment Comparison (if applicable) */}
+        {hasParentalContribution && investmentData.length > 0 && (
+          <div className="bg-white p-6 border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Your Contribution: Loan Savings vs Investment Growth</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={investmentData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
+                <YAxis label={{ value: 'Amount (£)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="Loan Savings"
+                  stroke="#10b981"
+                  dot={false}
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="3% Growth"
+                  stroke="#8b5cf6"
+                  dot={false}
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="4% Growth"
+                  stroke="#3b82f6"
+                  dot={false}
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="5% Growth"
+                  stroke="#06b6d4"
+                  dot={false}
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            <p className="text-sm text-gray-600 mt-3">
+              Compares the loan interest savings (green line) against potential investment growth at different returns (3%, 4%, 5%).
+              {investmentData[investmentData.length - 1] && (
+                <>
+                  <br />At year {investmentData[investmentData.length - 1].year}:
+                  <br />• Loan savings: {formatCurrency(investmentData[investmentData.length - 1]['Loan Savings'])}
+                  <br />• At 4% growth: {formatCurrency(investmentData[investmentData.length - 1]['4% Growth'])}
+                  <br />• At 5% growth: {formatCurrency(investmentData[investmentData.length - 1]['5% Growth'])}
+                </>
+              )}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Next Steps */}
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-6">
-        <h3 className="font-semibold text-amber-900 mb-2">📋 Next Steps</h3>
-        <ol className="text-sm text-amber-900 space-y-1 list-decimal list-inside">
-          <li>Share these results with your child</li>
-          <li>Discuss realistic career expectations and salary progression</li>
-          <li>Consider if parental contribution can reduce the loan needed</li>
-          <li>Review actual university costs and adjust if needed</li>
-          <li>Visit Student Finance England for official guidance</li>
-        </ol>
-      </div>
-
-      {/* Resources */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
-        <h3 className="font-semibold text-blue-900 mb-2">🔗 Useful Resources</h3>
+      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="font-semibold text-blue-900 mb-2">📋 Next Steps</h3>
         <ul className="text-sm text-blue-900 space-y-1">
-          <li>
-            <a
-              href="https://www.gov.uk/student-finance-england"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-blue-700"
-            >
-              Student Finance England (Official)
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.slc.co.uk/borrowers/repayment/how-repayment-works.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-blue-700"
-            >
-              Student Loans Company - How Repayment Works
-            </a>
-          </li>
-          <li>
-            <a
-              href="https://www.gov.uk/guidance/plan-2-student-loans-overview"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-blue-700"
-            >
-              Plan 2 Student Loans Overview
-            </a>
-          </li>
+          <li>• Review the scenarios to understand your child's repayment timeline</li>
+          {hasParentalContribution && (
+            <li>• See how your contribution reduces the loan burden and total interest paid</li>
+          )}
+          <li>• Use the Excel export for detailed year-by-year breakdown</li>
+          <li>• Check Student Finance England for the latest information</li>
         </ul>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 justify-between flex-wrap">
+      {/* Export and Navigation */}
+      <div className="flex justify-between gap-3 mt-8">
         <Button
           variant="secondary"
           onClick={onBack}
         >
           ← Back
         </Button>
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3">
           <Button
             variant="secondary"
             onClick={() => exportScenariosToExcel(results, totalLoan, userInput)}
-            size="lg"
           >
-            📊 Export to Excel
+            📥 Export to Excel
           </Button>
           <Button
-            variant="secondary"
             onClick={onReset}
             size="lg"
           >
-            🔄 Try Another
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => window.print()}
-            size="lg"
-          >
-            🖨️ Print
+            🔄 Try Another Scenario
           </Button>
         </div>
       </div>

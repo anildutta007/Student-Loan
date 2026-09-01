@@ -24,6 +24,7 @@ export function useCalculations() {
   const [userInput, setUserInput] = useState<UserInput | null>(null)
   const [totalLoan, setTotalLoan] = useState<number>(0)
   const [results, setResults] = useState<RepaymentOutput[] | null>(null)
+  const [fullLoanResults, setFullLoanResults] = useState<RepaymentOutput[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -103,12 +104,27 @@ export function useCalculations() {
 
       setTotalLoan(total)
 
-      // Calculate all scenarios
+      // Calculate scenarios with parental contribution
       const calculatedResults = calculateAllScenarios(
         loanInput,
         DEFAULT_SCENARIOS
       )
       setResults(calculatedResults)
+
+      // Also calculate scenarios with full loan (for comparison)
+      if (loanInput.parentalContribution > 0) {
+        const fullLoanInput: LoanInput = {
+          ...loanInput,
+          parentalContribution: 0,
+        }
+        const fullLoanCalculatedResults = calculateAllScenarios(
+          fullLoanInput,
+          DEFAULT_SCENARIOS
+        )
+        setFullLoanResults(fullLoanCalculatedResults)
+      } else {
+        setFullLoanResults(null)
+      }
 
       setStep(3)
     } catch (err) {
@@ -133,6 +149,7 @@ export function useCalculations() {
     setUserInput(null)
     setTotalLoan(0)
     setResults(null)
+    setFullLoanResults(null)
     setError(null)
   }, [])
 
@@ -151,6 +168,7 @@ export function useCalculations() {
     userInput,
     totalLoan,
     results,
+    fullLoanResults,
     loading,
     error,
 

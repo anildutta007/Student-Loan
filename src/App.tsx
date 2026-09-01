@@ -15,6 +15,7 @@ function App() {
     userInput,
     totalLoan,
     results,
+    fullLoanResults,
     loading,
     error,
     submitStep1,
@@ -83,6 +84,7 @@ function App() {
         {step === 4 && results && userInput && (
           <ResultsSummary
             results={results}
+            fullLoanResults={fullLoanResults}
             totalLoan={totalLoan}
             userInput={userInput}
             onBack={goBack}
