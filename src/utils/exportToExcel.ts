@@ -29,7 +29,7 @@ export function exportScenariosToExcel(
 
   // Add detailed sheets for each scenario
   results.forEach((result) => {
-    addScenarioSheet(wb, result)
+    addScenarioSheet(wb, result, userInput)
   })
 
   // Save file
@@ -110,82 +110,111 @@ function addSummarySheet(
  */
 function addScenarioSheet(
   wb: XLSX.WorkBook,
-  result: RepaymentOutput
+  result: RepaymentOutput,
+  userInput: UserInput
 ): void {
   const sheetData: any[] = [
     [`Scenario ${result.scenario}: ${result.label}`],
     [],
     ['Starting Salary', formatCurrency(result.startingSalary)],
     ['Annual Salary Growth', '5%'],
-    ['Total Loan Amount', formatCurrency(result.repaymentTimeline[0]?.loanBalance || 0)],
     [],
-    [
-      'Year',
-      'Salary',
-      'Repayable Income',
-      'Annual Payment',
-      'Monthly Payment',
-      `Interest Charged (${(UK_LOAN_SYSTEM.INTEREST_RATE * 100).toFixed(1)}%)`,
-      'Cumulative Paid',
-      'Loan Balance',
-      'Interest Rate %',
-    ],
   ]
 
-  // Add timeline data
-  const REPAYMENT_THRESHOLD = UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD
-  const REPAYMENT_RATE = UK_LOAN_SYSTEM.REPAYMENT_RATE
-  const INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE
+  // ==================== STUDY PERIOD SECTION ====================
+  sheetData.push(['LOAN ACCUMULATION DURING STUDY PERIOD'])
+  sheetData.push([
+    'Year of Study',
+    'Annual Fees (Tuition + Maintenance)',
+    'Interest Accrued on Loan',
+    'Total Loan Balance at Year End',
+  ])
 
-  // Calculate balance at start of each year to show interest
-  let balanceAtYearStart = result.repaymentTimeline[0]?.loanBalance || 0
-  if (result.repaymentTimeline.length > 0) {
-    const firstYear = result.repaymentTimeline[0]
-    const firstPayment = firstYear.monthlyPayment * 12
-    balanceAtYearStart = Math.round((firstYear.loanBalance + firstPayment) / (1 + INTEREST_RATE))
-  }
+  // Calculate study period accumulation
+  let studyLoanBalance = 0
+  let studyPeriodInterest = 0
+  const STUDY_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_DURING_STUDY
+  const annualFees = UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL + userInput.annualMaintenanceActual
 
-  result.repaymentTimeline.forEach((yearData, index) => {
-    const repayableIncome = Math.max(0, yearData.salary - REPAYMENT_THRESHOLD)
-    const annualPayment = yearData.monthlyPayment * 12
+  for (let year = 1; year <= userInput.yearsOfStudy; year++) {
+    // Interest is charged on the balance at the start of the year
+    const interestCharged = studyLoanBalance * STUDY_INTEREST_RATE
+    studyPeriodInterest += interestCharged
 
-    // Calculate interest charged in this year
-    let interestCharged = 0
-    let balanceBeforePayment = yearData.loanBalance + annualPayment
-    if (index > 0) {
-      interestCharged = Math.round(balanceBeforePayment * INTEREST_RATE * 100) / 100
-    }
-
-    const interestPercent = INTEREST_RATE * 100
+    // Add fees and interest to the balance
+    studyLoanBalance += annualFees + interestCharged
 
     sheetData.push([
-      yearData.year,
-      formatCurrency(yearData.salary),
-      formatCurrency(repayableIncome),
-      formatCurrency(annualPayment),
-      formatCurrency(yearData.monthlyPayment),
-      formatCurrency(interestCharged),
-      formatCurrency(yearData.totalPaid),
-      formatCurrency(yearData.loanBalance),
-      `${interestPercent.toFixed(1)}%`,
+      year,
+      formatCurrency(annualFees),
+      formatCurrency(Math.round(interestCharged)),
+      formatCurrency(Math.round(studyLoanBalance)),
     ])
+  }
+
+  sheetData.push([])
+  sheetData.push(['Total Loan at Graduation (including interest)', formatCurrency(Math.round(studyLoanBalance))])
+  sheetData.push(['Total Interest Accrued During Study', formatCurrency(Math.round(studyPeriodInterest))])
+  sheetData.push([])
+
+  // ==================== REPAYMENT SCHEDULE SECTION ====================
+  sheetData.push(['REPAYMENT SCHEDULE (After Graduation)'])
+  sheetData.push([
+    'Year',
+    'Salary',
+    'Repayable Income',
+    'Annual Payment',
+    'Monthly Payment',
+    `Interest Charged (${(UK_LOAN_SYSTEM.INTEREST_RATE * 100).toFixed(1)}%)`,
+    'Cumulative Paid',
+    'Loan Balance',
+    'Interest Rate %',
+  ])
+
+  // Add repayment timeline - only include years AFTER graduation
+  const REPAYMENT_THRESHOLD = UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD
+  const INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE
+
+  result.repaymentTimeline.forEach((yearData) => {
+    const isStudyYear = yearData.year <= userInput.yearsOfStudy
+
+    // Only show years AFTER graduation
+    if (!isStudyYear) {
+      const repayableIncome = Math.max(0, yearData.salary - REPAYMENT_THRESHOLD)
+      const annualPayment = yearData.monthlyPayment * 12
+      const yearPostGrad = yearData.year - userInput.yearsOfStudy
+
+      sheetData.push([
+        yearPostGrad,
+        formatCurrency(yearData.salary),
+        formatCurrency(repayableIncome),
+        formatCurrency(annualPayment),
+        formatCurrency(yearData.monthlyPayment),
+        formatCurrency(yearData.interestCharged),
+        formatCurrency(yearData.totalPaid),
+        formatCurrency(yearData.loanBalance),
+        `${(INTEREST_RATE * 100).toFixed(1)}%`,
+      ])
+    }
   })
 
   // Add summary rows
   sheetData.push([])
   sheetData.push(['REPAYMENT SUMMARY'])
-  sheetData.push(['Years to Full Repayment', result.yearsToRepayment])
+  sheetData.push(['Years to Full Repayment (after graduation)', result.yearsToRepayment - userInput.yearsOfStudy])
   sheetData.push(['Total Amount Paid', formatCurrency(result.totalAmountPaid)])
-  sheetData.push(['Interest Paid', formatCurrency(result.interestPaid)])
+  sheetData.push(['Interest Paid (During Repayment)', formatCurrency(result.interestPaid)])
+  sheetData.push(['Interest Accrued (During Study)', formatCurrency(Math.round(studyPeriodInterest))])
+  sheetData.push(['Total Interest (Study + Repayment)', formatCurrency(Math.round(result.interestPaid + studyPeriodInterest))])
 
   const ws = XLSX.utils.aoa_to_sheet(sheetData)
 
   // Format column widths
   ws['!cols'] = [
-    { wch: 8 },    // Year
-    { wch: 14 },   // Salary
-    { wch: 16 },   // Repayable Income
-    { wch: 16 },   // Annual Payment
+    { wch: 12 },   // Year
+    { wch: 18 },   // Salary / Annual Fees
+    { wch: 18 },   // Repayable Income / Interest Accrued
+    { wch: 16 },   // Annual Payment / Total Loan Balance
     { wch: 16 },   // Monthly Payment
     { wch: 18 },   // Interest Charged
     { wch: 16 },   // Cumulative Paid
@@ -196,7 +225,7 @@ function addScenarioSheet(
   // Format number columns
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
   for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = 1; C <= 7; ++C) {
+    for (let C = 1; C <= 8; ++C) {
       const cellAddress = XLSX.utils.encode_col(C) + XLSX.utils.encode_row(R)
       const cell = ws[cellAddress]
       if (cell && typeof cell.v === 'number') {
