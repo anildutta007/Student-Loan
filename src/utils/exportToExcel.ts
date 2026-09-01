@@ -47,13 +47,14 @@ function addSummarySheet(
   userInput: UserInput
 ): void {
   const summaryData: any[] = [
-    ['STUDENT LOAN CALCULATOR - SUMMARY'],
+    ['STUDENT LOAN CALCULATOR - SUMMARY (2026-27)'],
     [],
     ['Loan Input Information'],
     ['Total Loan Amount', formatCurrency(totalLoan)],
     ['Years of Study', userInput.yearsOfStudy],
-    ['Maintenance Allowance', formatCurrency(userInput.maintenanceAllowance)],
-    ['Annual Tuition Fee', formatCurrency(9250)],
+    ['Maintenance Allowance', formatCurrency(userInput.annualMaintenanceActual || 0)],
+    ['Annual Tuition Fee', formatCurrency(UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL)],
+    ['Parental Contribution', formatCurrency(userInput.parentalContribution || 0)],
     [],
     ['Scenario Comparison'],
     [
@@ -81,10 +82,11 @@ function addSummarySheet(
   })
 
   summaryData.push([])
-  summaryData.push(['UK Student Loan Information'])
+  summaryData.push(['UK Student Loan Information (Plan 2 - 2026-27)'])
   summaryData.push(['Repayment Threshold', formatCurrency(UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD)])
   summaryData.push(['Repayment Rate', '9% of income above threshold'])
-  summaryData.push(['Interest Rate', 'RPI + 3%'])
+  summaryData.push(['Interest Rate', `${(UK_LOAN_SYSTEM.INTEREST_RATE * 100).toFixed(1)}% RPI`])
+  summaryData.push(['Interest During Study', 'Yes - accrues on loan balance'])
   summaryData.push(['Forgiveness Period', '40 years'])
 
   const ws = XLSX.utils.aoa_to_sheet(summaryData)
@@ -123,7 +125,7 @@ function addScenarioSheet(
       'Repayable Income',
       'Annual Payment',
       'Monthly Payment',
-      'Interest Charged (6%)',
+      `Interest Charged (${(UK_LOAN_SYSTEM.INTEREST_RATE * 100).toFixed(1)}%)`,
       'Cumulative Paid',
       'Loan Balance',
       'Interest Rate %',

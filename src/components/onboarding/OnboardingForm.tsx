@@ -166,7 +166,7 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, loading = fal
         {/* Info Box */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            ℹ️ <strong>Note:</strong> We'll calculate the total loan amount based on tuition fees (£9,250/year) plus your eligible maintenance allowance, minus any parental contribution. Then we'll show you 4 salary scenarios with expected monthly repayment amounts.
+            ℹ️ <strong>Note:</strong> We'll calculate the total loan amount based on tuition fees (£9,535/year for 2026-27) plus your eligible maintenance allowance, minus any parental contribution. Then we'll show you 4 salary scenarios with expected monthly repayment amounts.
           </p>
         </div>
 

@@ -179,13 +179,22 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
         {/* Information */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
           <p className="text-sm text-blue-900">
-            <strong>ℹ️ 2026/27 System:</strong> The UK student loan covers tuition (£9,250/year) and eligible maintenance allowance based on your living situation and household income.
+            <strong>ℹ️ 2026/27 System:</strong> The UK student loan covers tuition (£{formatCurrency(annualTuition)}/year for 2026-27) and eligible maintenance allowance based on your living situation and household income.
           </p>
           <p className="text-sm text-blue-900">
             <strong>Interest:</strong> 4.5% RPI applies during study AND after graduation. Your loan will be forgiven after 40 years.
           </p>
           <p className="text-sm text-blue-900">
             <strong>Maintenance Taper:</strong> Your eligible allowance reduces gradually if household income exceeds £25,000, with a guaranteed minimum floor.
+          </p>
+          <p className="text-sm text-blue-900 mt-3">
+            <strong>Useful Resources:</strong>
+            <br />
+            • <a href="https://www.gov.uk/student-finance-england" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Student Finance England (Official)</a>
+            <br />
+            • <a href="https://www.slc.co.uk/borrowers/repayment/how-repayment-works.html" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">SLC - How Repayment Works</a>
+            <br />
+            • <a href="https://www.gov.uk/guidance/plan-2-student-loans-overview" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Plan 2 Student Loans Overview</a>
           </p>
         </div>
 
@@ -204,7 +213,7 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
         {/* Info Box */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            <strong>ℹ️ How this works:</strong> The tuition fee and eligible maintenance allowance are calculated based on 2026/27 rates and your situation. You can adjust your parental contribution to see how it reduces the loan amount needed. Investment potential shows what your contribution could grow to if invested at 4% annually over your study period.
+            <strong>ℹ️ How this works:</strong> The tuition fee (£{formatCurrency(annualTuition)}/year for 2026-27) and eligible maintenance allowance are calculated based on your situation. You can adjust your parental contribution to see how it reduces the loan amount needed. Investment potential shows what your contribution could grow to if invested at 4% annually over your study period.
           </p>
         </div>
 
