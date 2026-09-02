@@ -150,17 +150,28 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
         </div>
 
         {/* Information */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
           <p className="text-sm text-blue-900">
             <strong>ℹ️ 2026/27 System:</strong> The UK student loan covers tuition (£{formatCurrency(annualTuition)}/year for 2026-27) and eligible maintenance allowance based on your living situation and household income.
           </p>
-          <p className="text-sm text-blue-900">
-            <strong>Interest:</strong> 4.5% RPI applies during study AND after graduation. Your loan will be forgiven after 40 years.
-          </p>
-          <p className="text-sm text-blue-900">
-            <strong>Maintenance Taper:</strong> Your eligible allowance reduces gradually if household income exceeds £25,000, with a guaranteed minimum floor.
-          </p>
-          <p className="text-sm text-blue-900 mt-3">
+
+          <div className="border-t border-blue-200 pt-2">
+            <p className="text-sm text-blue-900 font-semibold">How Repayment Works:</p>
+            <ul className="text-sm text-blue-900 space-y-1 ml-3 list-disc">
+              <li><strong>Repayment Threshold:</strong> £25,000 - no repayment if salary is below this</li>
+              <li><strong>Repayment Rate:</strong> 9% of income earned ABOVE £25,000 threshold</li>
+              <li><strong>Interest During Study:</strong> Interest accrues on the loan while the student is at university (not just after graduation)</li>
+              <li><strong>Interest Rate:</strong> <strong>4.5% RPI (for this calculator demonstration)</strong> - This rate may be higher or lower in future years depending on actual inflation rates</li>
+              <li><strong>Loan Forgiveness:</strong> Any remaining balance is forgiven after 40 years</li>
+            </ul>
+          </div>
+
+          <div className="border-t border-blue-200 pt-2">
+            <p className="text-sm text-blue-900 font-semibold">Maintenance Taper:</p>
+            <p className="text-sm text-blue-900">Your eligible allowance reduces gradually if household income exceeds £25,000, with a guaranteed minimum floor to ensure you receive some support.</p>
+          </div>
+
+          <p className="text-sm text-blue-900 mt-2">
             <strong>Useful Resources:</strong>
             <br />
             • <a href="https://www.gov.uk/student-finance-england" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Student Finance England (Official)</a>

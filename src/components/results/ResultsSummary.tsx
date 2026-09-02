@@ -110,22 +110,34 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
     return data
   }, [results, fullLoanResults, hasParentalContribution, totalLoan, userInput.parentalContribution])
 
-  // Loan Balance comparison
+  // Loan Balance comparison - show all scenarios
   const loanBalanceData = useMemo(() => {
     if (!results[0]?.repaymentTimeline) return []
 
     const data: any[] = []
-    const timeline = results[0].repaymentTimeline
-    const fullTimeline = fullLoanResults?.[0]?.repaymentTimeline || []
+    const maxYears = Math.max(...results.map(r => r.repaymentTimeline.length))
 
-    for (let i = 0; i < Math.min(timeline.length, 35); i++) {
-      const point: any = {
-        year: i + 1,
-        'With Contribution': Math.max(0, timeline[i]?.loanBalance || 0),
+    for (let i = 0; i < Math.min(maxYears, 35); i++) {
+      const point: any = { year: i + 1 }
+
+      // Add all scenarios (A, B, C, D)
+      results.forEach((result) => {
+        const yearData = result.repaymentTimeline[i]
+        if (yearData) {
+          point[`Student ${result.scenario}`] = Math.max(0, yearData.loanBalance || 0)
+        }
+      })
+
+      // Add comparison with full loan if applicable
+      if (hasParentalContribution) {
+        fullLoanResults?.forEach((result) => {
+          const yearData = result.repaymentTimeline[i]
+          if (yearData) {
+            point[`Student ${result.scenario} (Full Loan)`] = Math.max(0, yearData.loanBalance || 0)
+          }
+        })
       }
-      if (hasParentalContribution && fullTimeline[i]) {
-        point['Without Contribution'] = Math.max(0, fullTimeline[i].loanBalance || 0)
-      }
+
       data.push(point)
     }
     return data
@@ -298,35 +310,42 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
         {/* 4. Loan Balance Over Time */}
         <div className="bg-white p-6 border border-gray-200 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📉 Loan Balance Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={loanBalanceData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={loanBalanceData} margin={{ top: 5, right: 30, left: 0, bottom: 20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
               <YAxis label={{ value: 'Outstanding Balance (£)', angle: -90, position: 'insideLeft' }} />
               <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="With Contribution"
-                stroke="#10b981"
-                dot={false}
-                strokeWidth={2}
-              />
-              {hasParentalContribution && (
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              {/* With Contribution Lines */}
+              {results.map((result) => (
                 <Line
+                  key={`with-${result.scenario}`}
                   type="monotone"
-                  dataKey="Without Contribution"
-                  stroke="#ef4444"
+                  dataKey={`Student ${result.scenario}`}
+                  stroke={result.color}
+                  dot={false}
+                  strokeWidth={2}
+                />
+              ))}
+              {/* Without Contribution Lines (if applicable) */}
+              {hasParentalContribution && fullLoanResults && fullLoanResults.map((result) => (
+                <Line
+                  key={`without-${result.scenario}`}
+                  type="monotone"
+                  dataKey={`Student ${result.scenario} (Full Loan)`}
+                  stroke={result.color}
                   dot={false}
                   strokeDasharray="5 5"
                   strokeWidth={2}
+                  opacity={0.6}
                 />
-              )}
+              ))}
             </LineChart>
           </ResponsiveContainer>
           <p className="text-sm text-gray-600 mt-3">
-            Shows how the loan balance decreases as payments are made. Loan is forgiven if unpaid after 40 years.
-            {hasParentalContribution && ' Red dashed line shows faster accumulation during study with full loan.'}
+            Shows how the loan balance decreases over time as payments are made. Loan is forgiven if unpaid after 40 years.
+            {hasParentalContribution && ' Dashed lines show comparison with full loan (without your contribution).'}
           </p>
         </div>
 
