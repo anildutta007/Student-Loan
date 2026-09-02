@@ -151,7 +151,7 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
               const fullLoanResult = fullLoanResults?.[idx]
 
               // Calculate investment growth using FULL LOAN repayment years (without contribution)
-              const investmentYears = fullLoanResult?.[idx]?.yearsToRepayment || result.yearsToRepayment
+              const investmentYears = fullLoanResult?.yearsToRepayment || result.yearsToRepayment
               const contribution = userInput.parentalContribution || 0
               const invGrowth3 = contribution * Math.pow(1.03, investmentYears)
               const invGrowth4 = contribution * Math.pow(1.04, investmentYears)
@@ -168,13 +168,13 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
 
                   {/* Without Contribution Columns */}
                   <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold">
-                    {fullLoanResult?.[idx]?.yearsToRepayment || '-'}
+                    {fullLoanResult?.yearsToRepayment || '-'}
                   </td>
                   <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 text-xs">
-                    {formatCurrency(fullLoanResult?.[idx]?.interestPaid || 0)}
+                    {formatCurrency(fullLoanResult?.interestPaid || 0)}
                   </td>
                   <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold text-xs">
-                    {formatCurrency(fullLoanResult?.[idx]?.totalAmountPaid || 0)}
+                    {formatCurrency(fullLoanResult?.totalAmountPaid || 0)}
                   </td>
 
                   {/* With Contribution Columns */}
