@@ -4,13 +4,9 @@ import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 import { formatCurrency, formatCurrencyDecimal } from '@utils/calculations'
 import PaymentChart from '@components/charts/PaymentChart'
-import TimelineChart from '@components/charts/TimelineChart'
 import TotalPaidChart from '@components/charts/TotalPaidChart'
 import BalanceChart from '@components/charts/BalanceChart'
-import InterestAccrualChart from '@components/charts/InterestAccrualChart'
 import InterestBreakdownChart from '@components/charts/InterestBreakdownChart'
-import InterestImpactChart from '@components/charts/InterestImpactChart'
-import ParentInvestmentChart from '@components/charts/ParentInvestmentChart'
 
 interface ScenarioComparisonProps {
   results: RepaymentOutput[]
@@ -29,6 +25,14 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
   onNext,
   onBack,
 }) => {
+  const fastestRepayment = results.reduce((min, curr) =>
+    curr.yearsToRepayment < min.yearsToRepayment ? curr : min
+  )
+
+  const lowestCost = results.reduce((min, curr) =>
+    curr.totalAmountPaid < min.totalAmountPaid ? curr : min
+  )
+
   return (
     <Card>
       <div className="mb-6">
@@ -42,22 +46,22 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
 
       {/* Info Box */}
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
-        <p className="text-sm text-blue-900 font-medium">Total Loan: {formatCurrency(totalLoan)}</p>
+        <p className="text-sm text-blue-900 font-medium">Total Loan Needed: {formatCurrency(totalLoan)}</p>
         <p className="text-sm text-blue-900 mt-1">
           All scenarios assume 5% annual salary growth and UK student loan Plan 2 repayment terms
         </p>
       </div>
 
-      {/* Comparison Table */}
-      <div className="overflow-x-auto mb-6">
+      {/* Scenario Summary Table */}
+      <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-100 border-y border-gray-200">
               <th className="text-left p-3 font-semibold text-gray-900">Scenario</th>
               <th className="text-right p-3 font-semibold text-gray-900">Starting Salary</th>
-              <th className="text-right p-3 font-semibold text-gray-900">Year 1 Payment</th>
+              <th className="text-right p-3 font-semibold text-gray-900">Year 1 Monthly Payment</th>
               <th className="text-right p-3 font-semibold text-gray-900">Years to Repay</th>
-              <th className="text-right p-3 font-semibold text-gray-900">Total Paid</th>
+              <th className="text-right p-3 font-semibold text-gray-900">Total Amount Paid</th>
             </tr>
           </thead>
           <tbody>
@@ -79,10 +83,10 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                   {formatCurrency(result.startingSalary)}
                 </td>
                 <td className="text-right p-3 text-gray-700">
-                  {formatCurrencyDecimal(result.firstYearMonthlyPayment)}/mo
+                  {formatCurrencyDecimal(result.firstYearMonthlyPayment)}
                 </td>
                 <td className="text-right p-3 text-gray-700 font-semibold">
-                  {result.yearsToRepayment} yrs
+                  {result.yearsToRepayment} years
                 </td>
                 <td className="text-right p-3 text-gray-700 font-semibold">
                   {formatCurrency(result.totalAmountPaid)}
@@ -93,139 +97,68 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
         </table>
       </div>
 
-      {/* Charts - Repayment Overview */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Repayment Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+      {/* 4 Key Charts */}
+      <div className="space-y-8">
+        {/* 1. Monthly Payment Over Time */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Monthly Payment Over Time</h3>
+          <div className="h-96">
             <PaymentChart results={results} />
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
-            <TimelineChart results={results} />
-          </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+          <p className="text-sm text-gray-600 mt-3">
+            Shows how monthly payments increase with salary growth (5% annually). Higher starting salaries lead to higher payments but faster loan repayment.
+          </p>
+        </div>
+
+        {/* 2. Total Amount Paid */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Total Amount Paid by Scenario</h3>
+          <div className="h-96">
             <TotalPaidChart results={results} />
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
-            <BalanceChart results={results} />
-          </div>
+          <p className="text-sm text-gray-600 mt-3">
+            Total repayment over the entire loan term including all interest. Higher earners pay more in total due to longer higher payments.
+          </p>
         </div>
-      </div>
 
-      {/* Charts - Interest Analysis */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Interest Analysis</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
-            <InterestAccrualChart results={results} />
-          </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg">
+        {/* 3. Interest vs Principal Comparison */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔀 Interest vs Principal Comparison</h3>
+          <div className="h-96">
             <InterestBreakdownChart results={results} totalLoan={totalLoan} />
           </div>
-          <div className="p-4 bg-white border border-gray-200 rounded-lg md:col-span-2">
-            <InterestImpactChart results={results} totalLoan={totalLoan} />
-          </div>
-        </div>
-      </div>
-
-      {/* Parent Investment Comparison */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">💼 Parent Investment Scenario</h3>
-        <div className="p-4 bg-white border border-gray-200 rounded-lg">
-          <ParentInvestmentChart results={results} totalLoan={totalLoan} />
+          <p className="text-sm text-gray-600 mt-3">
+            Stacked breakdown showing the principal (original loan) vs interest charged on each scenario. Higher interest is paid when repayment takes longer.
+          </p>
         </div>
 
-        {/* Detailed Comparison Tables - Multiple Growth Rates */}
-        {[0.03, 0.04, 0.05].map((rate) => (
-          <div key={rate} className="mt-6">
-            <h4 className="text-md font-semibold text-gray-900 mb-3">
-              {(rate * 100).toFixed(0)}% Annual Investment Return
-            </h4>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-100 border-y border-gray-200">
-                    <th className="text-left p-3 font-semibold text-gray-900">Scenario</th>
-                    <th className="text-right p-3 font-semibold text-gray-900">Loan Cost</th>
-                    <th className="text-right p-3 font-semibold text-gray-900">Years</th>
-                    <th className="text-right p-3 font-semibold text-gray-900">Investment Value</th>
-                    <th className="text-right p-3 font-semibold text-gray-900">Investment Gain</th>
-                    <th className="text-right p-3 font-semibold text-gray-900">vs Loan Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((result) => {
-                    const investmentValue = totalLoan * Math.pow(1 + rate, result.yearsToRepayment)
-                    const investmentGain = investmentValue - totalLoan
-                    const difference = investmentValue - result.totalAmountPaid
-
-                    return (
-                      <tr
-                        key={`${result.scenario}-${rate}`}
-                        className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="p-3 font-medium text-gray-900">
-                          Student {result.scenario}
-                        </td>
-                        <td className="text-right p-3 text-red-700 font-semibold">
-                          {formatCurrency(result.totalAmountPaid)}
-                        </td>
-                        <td className="text-right p-3 text-gray-700">
-                          {result.yearsToRepayment}
-                        </td>
-                        <td className="text-right p-3 text-blue-700 font-semibold">
-                          {formatCurrency(Math.round(investmentValue))}
-                        </td>
-                        <td className="text-right p-3 text-green-700 font-semibold">
-                          {formatCurrency(Math.round(investmentGain))}
-                        </td>
-                        <td className="text-right p-3 font-semibold"
-                          style={{
-                            color: difference > 0 ? '#059669' : '#dc2626'
-                          }}>
-                          +{formatCurrency(Math.round(difference))}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+        {/* 4. Loan Balance Over Time */}
+        <div className="bg-white p-6 border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">📉 Loan Balance Over Time</h3>
+          <div className="h-96">
+            <BalanceChart results={results} />
           </div>
-        ))}
-
-        {/* Explanation */}
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900 font-semibold mb-2">📊 How to Read This:</p>
-          <ul className="text-sm text-blue-900 space-y-1 ml-4 list-disc">
-            <li><strong>Original Loan:</strong> Amount needed for college</li>
-            <li><strong>Total Loan Cost:</strong> What student actually pays back (includes interest)</li>
-            <li><strong>Investment Value:</strong> If parent had invested the money at 3% annually instead</li>
-            <li><strong>Investment Gain:</strong> Growth from 3% returns over repayment period</li>
-            <li><strong>Difference:</strong> How much MORE the investment would be worth vs loan cost</li>
-            <li><strong>Positive difference:</strong> Investment would have been more valuable than taking the loan</li>
-          </ul>
+          <p className="text-sm text-gray-600 mt-3">
+            Shows how the outstanding loan balance decreases over time as payments are made. Loan is forgiven if unpaid after 40 years.
+          </p>
         </div>
       </div>
 
       {/* Key Insights */}
-      <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-6">
-        <h3 className="font-semibold text-green-900 mb-2">💡 Key Insights</h3>
-        <ul className="text-sm text-green-900 space-y-1">
+      <div className="p-4 bg-green-50 border border-green-200 rounded-lg mt-8 mb-6">
+        <h3 className="font-semibold text-green-900 mb-3">💡 Key Insights</h3>
+        <ul className="text-sm text-green-900 space-y-2">
           <li>
-            • <strong>Fastest payoff:</strong> Student {results.reduce((min, curr) =>
-              curr.yearsToRepayment < min.yearsToRepayment ? curr : min
-            ).scenario} in {results.reduce((min, curr) =>
-              curr.yearsToRepayment < min.yearsToRepayment ? curr : min
-            ).yearsToRepayment} years
+            <strong>Fastest payoff:</strong> Student {fastestRepayment.scenario} in {fastestRepayment.yearsToRepayment} years
           </li>
           <li>
-            • <strong>Lowest lifetime cost:</strong> {formatCurrency(
-              Math.min(...results.map(r => r.totalAmountPaid))
-            )}
+            <strong>Lowest lifetime cost:</strong> {formatCurrency(lowestCost.totalAmountPaid)} (Student {lowestCost.scenario})
           </li>
           <li>
-            • Monthly payments scale directly with salary growth at 5% annually
+            <strong>Monthly payments scale with salary:</strong> Each scenario assumes consistent 5% annual salary growth after graduation
+          </li>
+          <li>
+            <strong>Career impact:</strong> Higher starting salaries lead to faster loan repayment and greater long-term financial freedom
           </li>
         </ul>
       </div>
@@ -243,7 +176,7 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
           onClick={onNext}
           size="lg"
         >
-          View Results →
+          View Results & Comparison →
         </Button>
       </div>
     </Card>
