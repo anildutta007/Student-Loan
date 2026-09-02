@@ -118,30 +118,30 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
             </tr>
 
             {/* Sub-headers */}
-            <tr className="bg-gray-50 border-b-2 border-gray-300">
-              <th className="text-left p-3 font-semibold text-gray-900 border-r border-gray-300"></th>
-              <th className="text-right p-3 font-semibold text-gray-900 border-r border-gray-300"></th>
+            <tr className="bg-gray-50 border-b-2 border-gray-300 text-xs">
+              <th className="text-left p-2 font-semibold text-gray-900 border-r border-gray-300"></th>
+              <th className="text-right p-2 font-semibold text-gray-900 border-r border-gray-300"></th>
 
               {/* Without Contribution Sub-headers */}
-              <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Years</th>
-              <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Interest Paid</th>
-              <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Total Paid</th>
+              <th className="text-right p-2 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Yrs</th>
+              <th className="text-right p-2 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Int</th>
+              <th className="text-right p-2 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Total</th>
 
               {/* With Contribution Sub-headers */}
               {hasParentalContribution && (
                 <>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Years</th>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Interest Paid</th>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Total Paid</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Yrs</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Int</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Total</th>
                 </>
               )}
 
               {/* Investment Growth Sub-headers */}
               {hasParentalContribution && (
                 <>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-green-50 border-r border-gray-300">3%</th>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-green-50 border-r border-gray-300">4%</th>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-green-50">5%</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-green-50 border-r border-gray-300">@3%</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-green-50 border-r border-gray-300">@4%</th>
+                  <th className="text-right p-2 font-semibold text-gray-900 bg-green-50">@5%</th>
                 </>
               )}
             </tr>
@@ -149,62 +149,60 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
           <tbody>
             {results.map((result, idx) => {
               const fullLoanResult = fullLoanResults?.[idx]
-              const fullLoanFirstPayment = fullLoanResult?.repaymentTimeline.find(y => y.year > userInput.yearsOfStudy)?.monthlyPayment || 0
-              const withContributionFirstPayment = result.repaymentTimeline.find(y => y.year > userInput.yearsOfStudy)?.monthlyPayment || 0
 
-              // Calculate investment growth
+              // Calculate investment growth using FULL LOAN repayment years (without contribution)
+              const investmentYears = fullLoanResult?.[idx]?.yearsToRepayment || result.yearsToRepayment
               const contribution = userInput.parentalContribution || 0
-              const yearsToRepay = result.yearsToRepayment
-              const growth3 = contribution * Math.pow(1.03, yearsToRepay)
-              const growth4 = contribution * Math.pow(1.04, yearsToRepay)
-              const growth5 = contribution * Math.pow(1.05, yearsToRepay)
+              const invGrowth3 = contribution * Math.pow(1.03, investmentYears)
+              const invGrowth4 = contribution * Math.pow(1.04, investmentYears)
+              const invGrowth5 = contribution * Math.pow(1.05, investmentYears)
 
               return (
-                <tr key={result.scenario} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="p-3 font-bold text-gray-900 border-r border-gray-300">
+                <tr key={result.scenario} className="border-b border-gray-200 hover:bg-gray-50 text-sm">
+                  <td className="p-2 font-bold text-gray-900 border-r border-gray-300">
                     Student {result.scenario}
                   </td>
-                  <td className="text-right p-3 text-gray-700 border-r border-gray-300 font-semibold">
+                  <td className="text-right p-2 text-gray-700 border-r border-gray-300 font-semibold">
                     {formatCurrency(result.startingSalary)}
                   </td>
 
                   {/* Without Contribution Columns */}
-                  <td className="text-right p-3 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold">
-                    {fullLoanResult?.yearsToRepayment || '-'}
+                  <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold">
+                    {fullLoanResult?.[idx]?.yearsToRepayment || '-'}
                   </td>
-                  <td className="text-right p-3 text-gray-700 bg-yellow-50 border-r border-gray-300">
-                    {formatCurrency(fullLoanResult?.interestPaid || 0)}
+                  <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 text-xs">
+                    {formatCurrency(fullLoanResult?.[idx]?.interestPaid || 0)}
                   </td>
-                  <td className="text-right p-3 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold">
-                    {formatCurrency(fullLoanResult?.totalAmountPaid || 0)}
+                  <td className="text-right p-2 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold text-xs">
+                    {formatCurrency(fullLoanResult?.[idx]?.totalAmountPaid || 0)}
                   </td>
 
                   {/* With Contribution Columns */}
                   {hasParentalContribution && (
                     <>
-                      <td className="text-right p-3 text-gray-700 bg-blue-50 border-r border-gray-300 font-semibold">
+                      <td className="text-right p-2 text-gray-700 bg-blue-50 border-r border-gray-300 font-semibold">
                         {result.yearsToRepayment}
                       </td>
-                      <td className="text-right p-3 text-gray-700 bg-blue-50 border-r border-gray-300">
+                      <td className="text-right p-2 text-gray-700 bg-blue-50 border-r border-gray-300 text-xs">
                         {formatCurrency(result.interestPaid)}
                       </td>
-                      <td className="text-right p-3 text-gray-700 bg-blue-50 border-r border-gray-300 font-semibold">
+                      <td className="text-right p-2 text-gray-700 bg-blue-50 border-r border-gray-300 font-semibold text-xs">
                         {formatCurrency(result.totalAmountPaid)}
                       </td>
                     </>
                   )}
 
-                  {/* Investment Growth Columns */}
+                  {/* Investment Growth Columns - Based on FULL LOAN repayment years */}
                   {hasParentalContribution && (
                     <>
-                      <td className="text-right p-3 text-gray-700 bg-green-50 border-r border-gray-300 font-semibold">
-                        {formatCurrency(Math.round(growth3))}
+                      <td className="text-right p-2 text-gray-700 bg-green-50 border-r border-gray-300 font-semibold text-xs">
+                        {formatCurrency(Math.round(invGrowth3))}
                       </td>
-                      <td className="text-right p-3 text-gray-700 bg-green-50 border-r border-gray-300 font-semibold">
-                        {formatCurrency(Math.round(growth4))}
+                      <td className="text-right p-2 text-gray-700 bg-green-50 border-r border-gray-300 font-semibold text-xs">
+                        {formatCurrency(Math.round(invGrowth4))}
                       </td>
-                      <td className="text-right p-3 text-gray-700 bg-green-50 font-semibold">
-                        {formatCurrency(Math.round(growth5))}
+                      <td className="text-right p-2 text-gray-700 bg-green-50 font-semibold text-xs">
+                        {formatCurrency(Math.round(invGrowth5))}
                       </td>
                     </>
                   )}
