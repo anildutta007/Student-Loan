@@ -87,13 +87,17 @@ export function buildRepaymentTimeline(
   const STUDY_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_DURING_STUDY // 4.5% (RPI) during study
 
   for (let year = 1; year <= MAX_REPAYMENT_YEARS; year++) {
-    const salary = calculateSalary(scenario, year)
-    const monthlyPayment = calculateMonthlyPayment(salary)
-    const annualPayment = monthlyPayment * 12
-
     // Interest rate depends on whether still studying
     const isStillStudying = year <= yearsOfStudy
     const interestRate = isStillStudying ? STUDY_INTEREST_RATE : REPAYMENT_INTEREST_RATE
+
+    // Calculate salary based on years AFTER graduation only
+    // Year 1-3 (study): salary doesn't matter (no repayment)
+    // Year 4+ (post-grad): use years since graduation for salary growth
+    const yearsPostGraduation = Math.max(0, year - yearsOfStudy)
+    const salary = yearsPostGraduation > 0 ? calculateSalary(scenario, yearsPostGraduation) : 0
+    const monthlyPayment = calculateMonthlyPayment(salary)
+    const annualPayment = monthlyPayment * 12
 
     // Calculate interest on current balance
     const interestCharged = currentBalance * interestRate
