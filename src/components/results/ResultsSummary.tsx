@@ -10,19 +10,7 @@ import {
   calculateRepaymentMetrics,
   generateInvestmentProjection,
 } from '@utils/dynamicScenarioCalculations'
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
+// Charts removed - only dynamic analysis shown
 
 interface ResultsSummaryProps {
   results: RepaymentOutput[]
@@ -49,6 +37,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
   const hasParentalContribution = (userInput.parentalContribution ?? 0) > 0
 
   // Calculate dynamic scenarios based on custom inputs
+  // These will recalculate whenever any input changes
   const dynamicWithContribution = useMemo(() => {
     return buildDynamicRepaymentTimeline({
       totalLoan: totalLoan + (customContribution > 0 ? customContribution : 0),
@@ -69,7 +58,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
       interestRate: customRpiRate,
       parentalContribution: 0,
     })
-  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate])
+  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
 
   const dynamicMetricsWithContribution = useMemo(() =>
     calculateRepaymentMetrics(dynamicWithContribution),
@@ -94,124 +83,6 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
   const fullLoanFastest = fullLoanResults?.[0] ? fullLoanResults.reduce((min, curr) =>
     curr.yearsToRepayment < min.yearsToRepayment ? curr : min
   ) : null
-
-  // Prepare comparison data for charts
-  const monthlyPaymentData = useMemo(() => {
-    if (!results[0]?.repaymentTimeline) return []
-
-    const data: any[] = []
-    const timeline = results[0].repaymentTimeline
-    const fullTimeline = fullLoanResults?.[0]?.repaymentTimeline || []
-
-    for (let i = 0; i < Math.min(timeline.length, 35); i++) {
-      const point: any = {
-        year: i + 1,
-        'With Contribution': Math.round(timeline[i]?.monthlyPayment * 100) / 100,
-      }
-      if (hasParentalContribution && fullTimeline[i]) {
-        point['Without Contribution'] = Math.round(fullTimeline[i].monthlyPayment * 100) / 100
-      }
-      data.push(point)
-    }
-    return data
-  }, [results, fullLoanResults, hasParentalContribution])
-
-  // Total Amount Paid comparison
-  const totalAmountPaidData = useMemo(() => {
-    const data: any[] = []
-    results.forEach((result, idx) => {
-      const fullResult = fullLoanResults?.[idx]
-      const point: any = {
-        scenario: `Student ${result.scenario}`,
-        'With Contribution': result.totalAmountPaid,
-      }
-      if (hasParentalContribution && fullResult) {
-        point['Without Contribution'] = fullResult.totalAmountPaid
-        point['Savings'] = fullResult.totalAmountPaid - result.totalAmountPaid
-      }
-      data.push(point)
-    })
-    return data
-  }, [results, fullLoanResults, hasParentalContribution])
-
-  // Interest vs Principal comparison
-  const interestPrincipalData = useMemo(() => {
-    const data: any[] = []
-    results.forEach((result, idx) => {
-      const fullResult = fullLoanResults?.[idx]
-      const principal = result.repaymentTimeline[0]?.loanBalance || totalLoan
-      const interest = result.interestPaid
-
-      const point: any = {
-        scenario: `Student ${result.scenario}`,
-        'Principal (Reduced)': principal,
-        'Interest (Reduced)': interest,
-      }
-
-      if (hasParentalContribution && fullResult) {
-        const fullPrincipal = fullResult.repaymentTimeline[0]?.loanBalance || (totalLoan + (userInput.parentalContribution || 0))
-        const fullInterest = fullResult.interestPaid
-        point['Principal (Full Loan)'] = fullPrincipal
-        point['Interest (Full Loan)'] = fullInterest
-      }
-      data.push(point)
-    })
-    return data
-  }, [results, fullLoanResults, hasParentalContribution, totalLoan, userInput.parentalContribution])
-
-  // Loan Balance comparison - show all scenarios
-  const loanBalanceData = useMemo(() => {
-    if (!results[0]?.repaymentTimeline) return []
-
-    const data: any[] = []
-    const maxYears = Math.max(...results.map(r => r.repaymentTimeline.length))
-
-    for (let i = 0; i < Math.min(maxYears, 35); i++) {
-      const point: any = { year: i + 1 }
-
-      // Add all scenarios (A, B, C, D)
-      results.forEach((result) => {
-        const yearData = result.repaymentTimeline[i]
-        if (yearData) {
-          point[`Student ${result.scenario}`] = Math.max(0, yearData.loanBalance || 0)
-        }
-      })
-
-      // Add comparison with full loan if applicable
-      if (hasParentalContribution) {
-        fullLoanResults?.forEach((result) => {
-          const yearData = result.repaymentTimeline[i]
-          if (yearData) {
-            point[`Student ${result.scenario} (Full Loan)`] = Math.max(0, yearData.loanBalance || 0)
-          }
-        })
-      }
-
-      data.push(point)
-    }
-    return data
-  }, [results, fullLoanResults, hasParentalContribution])
-
-  // Investment comparison (if parental contribution exists)
-  const investmentData = useMemo(() => {
-    if (!hasParentalContribution || !results[0]?.repaymentTimeline) return []
-
-    const contribution = userInput.parentalContribution || 0
-    const yearsToRepay = results[0].yearsToRepayment
-    const data: any[] = []
-
-    for (let year = 1; year <= yearsToRepay && year <= 40; year++) {
-      const point: any = {
-        year,
-        'Loan Savings': contribution * (year / yearsToRepay),
-        '3% Growth': contribution * Math.pow(1.03, year),
-        '4% Growth': contribution * Math.pow(1.04, year),
-        '5% Growth': contribution * Math.pow(1.05, year),
-      }
-      data.push(point)
-    }
-    return data
-  }, [results, hasParentalContribution, userInput.parentalContribution])
 
   return (
     <Card>
@@ -432,191 +303,6 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
         )}
       </div>
 
-      {/* Charts Section */}
-      <div className="space-y-8">
-        {/* 1. Monthly Payment Over Time */}
-        <div className="bg-white p-6 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Monthly Payment Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyPaymentData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
-              <YAxis label={{ value: 'Monthly Payment (£)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value) => formatCurrencyDecimal(value as number)} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="With Contribution"
-                stroke="#3b82f6"
-                dot={false}
-                strokeWidth={2}
-              />
-              {hasParentalContribution && (
-                <Line
-                  type="monotone"
-                  dataKey="Without Contribution"
-                  stroke="#ef4444"
-                  dot={false}
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-          <p className="text-sm text-gray-600 mt-3">
-            Shows monthly payment increasing with salary growth (5% annually).
-            {hasParentalContribution && ' Red dashed line shows impact of full loan without contribution.'}
-          </p>
-        </div>
-
-        {/* 2. Total Amount Paid */}
-        <div className="bg-white p-6 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">💰 Total Amount Paid by Scenario</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={totalAmountPaidData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="scenario" />
-              <YAxis label={{ value: 'Total Paid (£)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Legend />
-              <Bar dataKey="With Contribution" fill="#3b82f6" />
-              {hasParentalContribution && (
-                <>
-                  <Bar dataKey="Without Contribution" fill="#ef4444" />
-                  <Bar dataKey="Savings" fill="#10b981" />
-                </>
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="text-sm text-gray-600 mt-3">
-            Total repayment over the entire loan term.
-            {hasParentalContribution && ' Green bar shows how much less you\'ll pay with your contribution.'}
-          </p>
-        </div>
-
-        {/* 3. Interest vs Principal Comparison */}
-        <div className="bg-white p-6 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔀 Interest vs Principal by Scenario</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={interestPrincipalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="scenario" />
-              <YAxis label={{ value: 'Amount (£)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Legend />
-              <Bar dataKey="Principal (Reduced)" stackId="a" fill="#3b82f6" />
-              <Bar dataKey="Interest (Reduced)" stackId="a" fill="#f59e0b" />
-              {hasParentalContribution && (
-                <>
-                  <Bar dataKey="Principal (Full Loan)" stackId="b" fill="#93c5fd" />
-                  <Bar dataKey="Interest (Full Loan)" stackId="b" fill="#fde047" />
-                </>
-              )}
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="text-sm text-gray-600 mt-3">
-            Stacked view showing principal (loan amount) vs interest charged.
-            {hasParentalContribution && ' Lighter colors show comparison with full loan.'}
-          </p>
-        </div>
-
-        {/* 4. Loan Balance Over Time */}
-        <div className="bg-white p-6 border border-gray-200 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📉 Loan Balance Over Time</h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={loanBalanceData} margin={{ top: 5, right: 30, left: 0, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
-              <YAxis label={{ value: 'Outstanding Balance (£)', angle: -90, position: 'insideLeft' }} />
-              <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
-              {/* With Contribution Lines */}
-              {results.map((result) => (
-                <Line
-                  key={`with-${result.scenario}`}
-                  type="monotone"
-                  dataKey={`Student ${result.scenario}`}
-                  stroke={result.color}
-                  dot={false}
-                  strokeWidth={2}
-                />
-              ))}
-              {/* Without Contribution Lines (if applicable) */}
-              {hasParentalContribution && fullLoanResults && fullLoanResults.map((result) => (
-                <Line
-                  key={`without-${result.scenario}`}
-                  type="monotone"
-                  dataKey={`Student ${result.scenario} (Full Loan)`}
-                  stroke={result.color}
-                  dot={false}
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                  opacity={0.6}
-                />
-              ))}
-            </LineChart>
-          </ResponsiveContainer>
-          <p className="text-sm text-gray-600 mt-3">
-            Shows how the loan balance decreases over time as payments are made. Loan is forgiven if unpaid after 40 years.
-            {hasParentalContribution && ' Dashed lines show comparison with full loan (without your contribution).'}
-          </p>
-        </div>
-
-        {/* 5. Investment Comparison (if applicable) */}
-        {hasParentalContribution && investmentData.length > 0 && (
-          <div className="bg-white p-6 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Your Contribution: Loan Savings vs Investment Growth</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={investmentData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="year" label={{ value: 'Years', position: 'insideBottomRight', offset: -5 }} />
-                <YAxis label={{ value: 'Amount (£)', angle: -90, position: 'insideLeft' }} />
-                <Tooltip formatter={(value) => formatCurrency(value as number)} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="Loan Savings"
-                  stroke="#10b981"
-                  dot={false}
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="3% Growth"
-                  stroke="#8b5cf6"
-                  dot={false}
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="4% Growth"
-                  stroke="#3b82f6"
-                  dot={false}
-                  strokeWidth={2}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="5% Growth"
-                  stroke="#06b6d4"
-                  dot={false}
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-            <p className="text-sm text-gray-600 mt-3">
-              Compares the loan interest savings (green line) against potential investment growth at different returns (3%, 4%, 5%).
-              {investmentData[investmentData.length - 1] && (
-                <>
-                  <br />At year {investmentData[investmentData.length - 1].year}:
-                  <br />• Loan savings: {formatCurrency(investmentData[investmentData.length - 1]['Loan Savings'])}
-                  <br />• At 4% growth: {formatCurrency(investmentData[investmentData.length - 1]['4% Growth'])}
-                  <br />• At 5% growth: {formatCurrency(investmentData[investmentData.length - 1]['5% Growth'])}
-                </>
-              )}
-            </p>
-          </div>
-        )}
-      </div>
 
       {/* Next Steps */}
       <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
