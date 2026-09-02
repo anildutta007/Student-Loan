@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { CalculatorState } from '@types/index'
 import { useCalculations } from '@hooks/useCalculations'
+import ReactGA from 'react-ga4'
 import Header from '@components/layout/Header'
 import CombinedOnboarding from '@components/onboarding/CombinedOnboarding'
 import ScenarioComparison from '@components/scenarios/ScenarioComparison'
@@ -8,6 +9,9 @@ import ResultsSummary from '@components/results/ResultsSummary'
 import InformationPage from '@components/information/InformationPage'
 import ProgressBar from '@components/common/ProgressBar'
 import FeedbackButton from '@components/feedback/FeedbackButton'
+
+// Initialize Google Analytics
+ReactGA.initialize('G-Q75B78LH80')
 
 function App() {
   const [showInformation, setShowInformation] = useState(false)
@@ -27,8 +31,53 @@ function App() {
     goBack,
   } = useCalculations()
 
+  // Track page views and user progress
+  useEffect(() => {
+    ReactGA.send("pageview")
+  }, [])
+
+  // Track step progression
+  useEffect(() => {
+    if (step === 1) {
+      ReactGA.event("calculator_step_1_view")
+    } else if (step === 2) {
+      ReactGA.event("calculator_step_2_view", {
+        total_loan: totalLoan,
+        years_of_study: userInput?.yearsOfStudy,
+        parental_contribution: userInput?.parentalContribution,
+      })
+    } else if (step === 3) {
+      ReactGA.event("calculator_step_3_view", {
+        total_loan: totalLoan,
+        parental_contribution: userInput?.parentalContribution,
+      })
+    }
+  }, [step, totalLoan, userInput])
+
+  // Track information tab view
+  useEffect(() => {
+    if (showInformation) {
+      ReactGA.event("information_tab_view")
+    }
+  }, [showInformation])
+
   const handleBackFromInfo = () => {
     setShowInformation(false)
+  }
+
+  const handleSubmitStep1 = (input: Parameters<typeof submitStep1>[0]) => {
+    ReactGA.event("calculator_form_submitted", {
+      years_of_study: input.yearsOfStudy,
+      household_income: input.householdIncome,
+      living_situation: input.livingSituation,
+      parental_contribution: input.parentalContribution,
+    })
+    submitStep1(input)
+  }
+
+  const handleReset = () => {
+    ReactGA.event("calculator_reset")
+    reset()
   }
 
   return (
@@ -36,7 +85,7 @@ function App() {
       <Header
         title="Student Loan Calculator"
         subtitle="Understand your child's monthly repayment after graduation"
-        onReset={reset}
+        onReset={handleReset}
       />
 
       {/* Navigation Tabs */}
@@ -95,7 +144,7 @@ function App() {
           <>
             {step === 1 && (
               <CombinedOnboarding
-                onSubmit={submitStep1}
+                onSubmit={handleSubmitStep1}
                 loading={loading}
               />
             )}
@@ -119,7 +168,7 @@ function App() {
                 totalLoan={totalLoan}
                 userInput={userInput}
                 onBack={goBack}
-                onReset={reset}
+                onReset={handleReset}
               />
             )}
           </>
