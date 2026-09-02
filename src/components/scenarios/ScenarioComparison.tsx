@@ -126,7 +126,6 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
               <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Years</th>
               <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Interest Paid</th>
               <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Total Paid</th>
-              <th className="text-right p-3 font-semibold text-gray-900 bg-yellow-50 border-r border-gray-300">Year 1 Monthly</th>
 
               {/* With Contribution Sub-headers */}
               {hasParentalContribution && (
@@ -134,7 +133,6 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                   <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Years</th>
                   <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Interest Paid</th>
                   <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Total Paid</th>
-                  <th className="text-right p-3 font-semibold text-gray-900 bg-blue-50 border-r border-gray-300">Year 1 Monthly</th>
                 </>
               )}
 
@@ -180,9 +178,6 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                   <td className="text-right p-3 text-gray-700 bg-yellow-50 border-r border-gray-300 font-semibold">
                     {formatCurrency(fullLoanResult?.totalAmountPaid || 0)}
                   </td>
-                  <td className="text-right p-3 text-gray-700 bg-yellow-50 border-r border-gray-300">
-                    {formatCurrencyDecimal(fullLoanFirstPayment)}
-                  </td>
 
                   {/* With Contribution Columns */}
                   {hasParentalContribution && (
@@ -195,9 +190,6 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                       </td>
                       <td className="text-right p-3 text-gray-700 bg-blue-50 border-r border-gray-300 font-semibold">
                         {formatCurrency(result.totalAmountPaid)}
-                      </td>
-                      <td className="text-right p-3 text-gray-700 bg-blue-50 border-r border-gray-300">
-                        {formatCurrencyDecimal(withContributionFirstPayment)}
                       </td>
                     </>
                   )}

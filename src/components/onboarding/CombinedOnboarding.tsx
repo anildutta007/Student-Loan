@@ -76,8 +76,8 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
             <label className="block text-sm font-medium text-gray-900 mb-3">
               How many years will they study?
             </label>
-            <div className="flex gap-2">
-              {[3, 4].map((year) => (
+            <div className="flex gap-2 flex-wrap">
+              {[3, 4, 5].map((year) => (
                 <label key={year} className="flex items-center">
                   <input
                     type="radio"
