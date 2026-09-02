@@ -88,7 +88,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
     <Card>
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          STEP 4 OF 4: Your Results
+          STEP 3 OF 3: Your Results
         </h2>
         <p className="text-gray-600">
           {hasParentalContribution

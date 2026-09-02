@@ -107,7 +107,7 @@ function App() {
                 totalLoan={totalLoan}
                 userInput={userInput}
                 loading={loading}
-                onNext={submitStep3}
+                onNext={submitStep2}
                 onBack={goBack}
               />
             )}
