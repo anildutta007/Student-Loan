@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import type { UserInput } from '@types/index'
 import { UK_LOAN_SYSTEM, LIVING_SITUATION_OPTIONS } from '@utils/constants'
 import { formatCurrency } from '@utils/calculations'
@@ -31,13 +31,6 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
   const subtotal = tuitionTotal + maintenanceTotal
   const finalTotal = Math.max(0, subtotal - parentalContribution)
 
-  // Calculate investment potential based on parental contribution
-  const investmentPotential = useMemo(() => {
-    if (parentalContribution <= 0) return 0
-    // Show 4% return as middle estimate
-    const years = userInput.yearsOfStudy
-    return parentalContribution * Math.pow(1.04, years)
-  }, [parentalContribution, userInput.yearsOfStudy])
 
   const handleConfirm = () => {
     // Update userInput with new parental contribution and call onConfirm
@@ -155,26 +148,6 @@ const LoanSummary: React.FC<LoanSummaryProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Investment Potential */}
-        {parentalContribution > 0 && (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="font-semibold text-amber-900 mb-2">📊 Investment Alternative (4% annual return)</h3>
-            <div className="grid grid-cols-2 gap-4 mt-3">
-              <div>
-                <p className="text-xs text-amber-800 uppercase">Amount Invested</p>
-                <p className="text-xl font-bold text-amber-900">{formatCurrency(parentalContribution)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-amber-800 uppercase">After {userInput.yearsOfStudy} years</p>
-                <p className="text-xl font-bold text-amber-900">{formatCurrency(investmentPotential)}</p>
-              </div>
-            </div>
-            <p className="text-xs text-amber-800 mt-3">
-              If this amount was invested at 4% annual return instead of paying toward the loan upfront.
-            </p>
-          </div>
-        )}
 
         {/* Information */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
