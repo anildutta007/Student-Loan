@@ -20,7 +20,7 @@ import {
  * Custom hook for managing calculator state and calculations
  */
 export function useCalculations() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [userInput, setUserInput] = useState<UserInput | null>(null)
   const [totalLoan, setTotalLoan] = useState<number>(0)
   const [results, setResults] = useState<RepaymentOutput[] | null>(null)
@@ -29,11 +29,13 @@ export function useCalculations() {
   const [error, setError] = useState<string | null>(null)
 
   /**
-   * Process user input and move to next step
+   * Process user input and calculate scenarios (combines old step 1 & 2)
    */
   const submitStep1 = useCallback((input: UserInput) => {
     try {
+      setLoading(true)
       setError(null)
+
       // Ensure numeric values are actually numbers (HTML forms return strings)
       const calculatedMaintenance = calculateMaintenanceAllowance(
         typeof input.householdIncome === 'string' ? parseInt(input.householdIncome, 10) : input.householdIncome,
@@ -50,35 +52,15 @@ export function useCalculations() {
         annualMaintenanceMax: undefined,
         annualMaintenanceActual: calculatedMaintenance,
       }
+
       setUserInput(normalizedInput)
-      setStep(2)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    }
-  }, [])
-
-  /**
-   * Confirm loan summary with potential parental contribution update
-   */
-  const submitStep2 = useCallback((updatedInput?: UserInput) => {
-    const inputToUse = updatedInput || userInput
-    if (!inputToUse) return
-
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Update userInput if it was modified on Step 2
-      if (updatedInput) {
-        setUserInput(updatedInput)
-      }
 
       // Prepare loan input for calculations
       const loanInput: LoanInput = {
-        yearsOfStudy: inputToUse.yearsOfStudy,
-        annualTuition: inputToUse.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
-        annualMaintenanceActual: inputToUse.annualMaintenanceActual ?? 0,
-        parentalContribution: inputToUse.parentalContribution ?? 0,
+        yearsOfStudy: normalizedInput.yearsOfStudy,
+        annualTuition: normalizedInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
+        annualMaintenanceActual: normalizedInput.annualMaintenanceActual ?? 0,
+        parentalContribution: normalizedInput.parentalContribution ?? 0,
       }
 
       // Validate input
@@ -89,18 +71,6 @@ export function useCalculations() {
 
       // Calculate total loan (includes parental contribution deduction)
       const total = calculateTotalLoan(loanInput)
-
-      // Debug logging
-      console.log('Loan Calculation Debug (2026/27):', {
-        yearsOfStudy: loanInput.yearsOfStudy,
-        annualTuition: loanInput.annualTuition,
-        annualMaintenance: loanInput.annualMaintenanceActual,
-        parentalContribution: loanInput.parentalContribution,
-        annualCost: loanInput.annualTuition + loanInput.annualMaintenanceActual,
-        totalBeforeContribution: (loanInput.annualTuition + loanInput.annualMaintenanceActual) * loanInput.yearsOfStudy,
-        totalLoanNeeded: total,
-        interestRate: UK_LOAN_SYSTEM.INTEREST_RATE,
-      })
 
       setTotalLoan(total)
 
@@ -126,12 +96,19 @@ export function useCalculations() {
         setFullLoanResults(null)
       }
 
-      setStep(3)
+      setStep(2)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Calculation failed')
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  /**
+   * Move to scenario comparison (old step 3)
+   */
+  const submitStep2 = useCallback(() => {
+    setStep(3)
   }, [])
 
   /**
@@ -142,7 +119,7 @@ export function useCalculations() {
   }, [])
 
   /**
-   * Reset calculator
+   * Reset calculator to step 1
    */
   const reset = useCallback(() => {
     setStep(1)
@@ -151,6 +128,7 @@ export function useCalculations() {
     setResults(null)
     setFullLoanResults(null)
     setError(null)
+    setLoading(false)
   }, [])
 
   /**
@@ -158,7 +136,7 @@ export function useCalculations() {
    */
   const goBack = useCallback(() => {
     if (step > 1) {
-      setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)
+      setStep((prev) => (prev - 1) as 1 | 2 | 3)
     }
   }, [step])
 

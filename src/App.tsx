@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import type { CalculatorState } from '@types/index'
 import { useCalculations } from '@hooks/useCalculations'
 import Header from '@components/layout/Header'
-import OnboardingForm from '@components/onboarding/OnboardingForm'
-import LoanSummary from '@components/summary/LoanSummary'
+import CombinedOnboarding from '@components/onboarding/CombinedOnboarding'
 import ScenarioComparison from '@components/scenarios/ScenarioComparison'
 import ResultsSummary from '@components/results/ResultsSummary'
+import InformationPage from '@components/information/InformationPage'
 import ProgressBar from '@components/common/ProgressBar'
 import FeedbackButton from '@components/feedback/FeedbackButton'
 
 function App() {
+  const [showInformation, setShowInformation] = useState(false)
+
   const {
     step,
     userInput,
@@ -25,6 +27,10 @@ function App() {
     goBack,
   } = useCalculations()
 
+  const handleBackFromInfo = () => {
+    setShowInformation(false)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -33,12 +39,42 @@ function App() {
         onReset={reset}
       />
 
-      {/* Progress Bar */}
+      {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <ProgressBar currentStep={step} totalSteps={4} />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-4 py-4">
+            <button
+              onClick={() => setShowInformation(false)}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                !showInformation
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Calculator
+            </button>
+            <button
+              onClick={() => setShowInformation(true)}
+              className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                showInformation
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Information & Assumptions
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Progress Bar - Only show for calculator, not information */}
+      {!showInformation && (
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <ProgressBar currentStep={step} totalSteps={3} />
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -53,43 +89,40 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        {step === 1 && (
-          <OnboardingForm
-            onSubmit={submitStep1}
-            loading={loading}
-          />
-        )}
+        {showInformation ? (
+          <InformationPage onBack={handleBackFromInfo} />
+        ) : (
+          <>
+            {step === 1 && (
+              <CombinedOnboarding
+                onSubmit={submitStep1}
+                loading={loading}
+              />
+            )}
 
-        {step === 2 && userInput && (
-          <LoanSummary
-            userInput={userInput}
-            totalLoan={totalLoan}
-            loading={loading}
-            onConfirm={submitStep2}
-            onBack={goBack}
-          />
-        )}
+            {step === 2 && results && userInput && (
+              <ScenarioComparison
+                results={results}
+                fullLoanResults={fullLoanResults}
+                totalLoan={totalLoan}
+                userInput={userInput}
+                loading={loading}
+                onNext={submitStep3}
+                onBack={goBack}
+              />
+            )}
 
-        {step === 3 && results && userInput && (
-          <ScenarioComparison
-            results={results}
-            totalLoan={totalLoan}
-            userInput={userInput}
-            loading={loading}
-            onNext={submitStep3}
-            onBack={goBack}
-          />
-        )}
-
-        {step === 4 && results && userInput && (
-          <ResultsSummary
-            results={results}
-            fullLoanResults={fullLoanResults}
-            totalLoan={totalLoan}
-            userInput={userInput}
-            onBack={goBack}
-            onReset={reset}
-          />
+            {step === 3 && results && userInput && (
+              <ResultsSummary
+                results={results}
+                fullLoanResults={fullLoanResults}
+                totalLoan={totalLoan}
+                userInput={userInput}
+                onBack={goBack}
+                onReset={reset}
+              />
+            )}
+          </>
         )}
       </main>
 
