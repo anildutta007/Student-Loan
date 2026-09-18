@@ -5,6 +5,8 @@ export type StudentStatus = 'new';
 
 export type LivingSituation = 'at-home' | 'away-london' | 'away-other';
 
+export type StudentLoanPlan = 'Plan 2' | 'Plan 5';
+
 export interface MaintenanceLimit {
   maximum: number;
   minimum: number;
@@ -16,6 +18,8 @@ export interface UserInput {
   livingSituation: LivingSituation;
   householdIncome: number; // User's family income
   parentalContribution: number; // Amount parent is putting upfront
+  studentLoanPlan: StudentLoanPlan; // Plan 2 or Plan 5
+  courseStartYear?: number; // Year course started (for plan selection)
   annualTuition?: number;
   annualMaintenanceMax?: number;
   annualMaintenanceActual?: number;
@@ -29,6 +33,7 @@ export interface LoanInput {
   annualTuition: number;
   annualMaintenanceActual: number;
   parentalContribution: number;
+  studentLoanPlan?: StudentLoanPlan;
 }
 
 export interface SalaryScenario {

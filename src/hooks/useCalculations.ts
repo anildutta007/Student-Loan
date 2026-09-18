@@ -61,6 +61,7 @@ export function useCalculations() {
         annualTuition: normalizedInput.annualTuition ?? UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL,
         annualMaintenanceActual: normalizedInput.annualMaintenanceActual ?? 0,
         parentalContribution: normalizedInput.parentalContribution ?? 0,
+        studentLoanPlan: normalizedInput.studentLoanPlan,
       }
 
       // Validate input

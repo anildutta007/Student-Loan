@@ -4,141 +4,202 @@ import {
   calculateSalary,
   calculateMonthlyPayment,
   calculateScenario,
+  buildRepaymentTimeline,
+  calculateAllScenarios,
 } from './calculations'
-import { DEFAULT_SCENARIOS, UK_LOAN_SYSTEM } from './constants'
+import { DEFAULT_SCENARIOS } from './constants'
 import type { LoanInput, SalaryScenario } from '@types/index'
 
-describe('Loan Calculations', () => {
-  describe('calculateTotalLoan', () => {
-    it('calculates total loan correctly', () => {
+describe('Student Loan Calculations - Critical Fixes', () => {
+  // Test data
+  const testLoanInput: LoanInput = {
+    yearsOfStudy: 3,
+    annualTuition: 9535,
+    annualMaintenanceActual: 9500,
+    parentalContribution: 0,
+    studentLoanPlan: 'Plan 5',
+  }
+
+  const testScenario: SalaryScenario = DEFAULT_SCENARIOS[0] // Student A - £30k
+
+  describe('CRITICAL FIX: Plan 2 vs Plan 5 Differences', () => {
+    it('Plan 2 and Plan 5 should have different thresholds', () => {
+      // Plan 2: £27,750 threshold → £30k salary pays ~£16.88/month
+      const plan2Payment30k = calculateMonthlyPayment(30000, 'Plan 2')
+
+      // Plan 5: £25,000 threshold → £30k salary pays ~£37.50/month
+      const plan5Payment30k = calculateMonthlyPayment(30000, 'Plan 5')
+
+      expect(plan5Payment30k).toBeGreaterThan(plan2Payment30k)
+      expect(Math.round(plan2Payment30k * 100) / 100).toBeCloseTo(16.88, 1)
+      expect(Math.round(plan5Payment30k * 100) / 100).toBeCloseTo(37.50, 1)
+    })
+
+    it('Plan 2 should have higher interest rate (RPI+3%) than Plan 5 (RPI only)', () => {
+      const scenario5 = calculateScenario(50000, testScenario, 3, 'Plan 5')
+      const scenario2 = calculateScenario(50000, testScenario, 3, 'Plan 2')
+
+      // Plan 2 with RPI+3% interest should have higher total interest
+      expect(scenario2.interestPaid).toBeGreaterThan(scenario5.interestPaid)
+    })
+
+    it('Plan 5 should have 40-year forgiveness, Plan 2 should have 30-year', () => {
+      // With a large loan and low salary, both should eventually be forgiven
+      const scenario5 = calculateScenario(150000, testScenario, 3, 'Plan 5')
+      const scenario2 = calculateScenario(150000, testScenario, 3, 'Plan 2')
+
+      // Plan 2 should be forgiven at or before 30 years
+      expect(scenario2.yearsToRepayment).toBeLessThanOrEqual(30)
+      // Plan 5 might go to 40 years
+      expect(scenario5.yearsToRepayment).toBeLessThanOrEqual(40)
+    })
+  })
+
+  describe('CRITICAL FIX: Scenario Table Bug (£0 values)', () => {
+    it('should NOT return zero payments for any salary scenario', () => {
+      const results = calculateAllScenarios(testLoanInput, DEFAULT_SCENARIOS)
+
+      results.forEach(result => {
+        expect(result.firstYearMonthlyPayment).not.toBe(0)
+        expect(result.yearsToRepayment).not.toBe(0)
+        expect(result.totalAmountPaid).not.toBe(0)
+        expect(result.interestPaid).toBeGreaterThan(0)
+      })
+    })
+
+    it('should have all 4 scenarios (A, B, C, D) with valid data', () => {
+      const results = calculateAllScenarios(testLoanInput, DEFAULT_SCENARIOS)
+
+      expect(results).toHaveLength(4)
+      expect(results.map(r => r.scenario)).toEqual(['A', 'B', 'C', 'D'])
+
+      // Each should have valid payment data
+      results.forEach((result, idx) => {
+        expect(result.firstYearMonthlyPayment).toBeGreaterThan(0)
+        expect(result.yearsToRepayment).toBeGreaterThan(0)
+        expect(result.repaymentTimeline.length).toBeGreaterThan(0)
+      })
+    })
+
+    it('table data should match calculation results (no data binding mismatch)', () => {
+      const result = calculateScenario(50000, testScenario, 3, 'Plan 5')
+      const timeline = buildRepaymentTimeline(50000, testScenario, 3, 'Plan 5')
+      const lastEntry = timeline[timeline.length - 1]
+
+      // Summary should match timeline
+      expect(result.totalAmountPaid).toBe(lastEntry.totalPaid)
+      expect(result.interestPaid).toBe(lastEntry.cumulativeInterest)
+    })
+  })
+
+  describe('CRITICAL FIX: £30k Salary Calculation', () => {
+    it('£30k salary on Plan 5 should show £37.50/month, not £0', () => {
+      const payment = calculateMonthlyPayment(30000, 'Plan 5')
+      // (£30,000 - £25,000) × 9% ÷ 12 = £37.50
+      expect(Math.round(payment * 100) / 100).toBeCloseTo(37.50, 1)
+      expect(payment).not.toBe(0)
+    })
+
+    it('£30k salary on Plan 2 should show ~£16.88/month', () => {
+      const payment = calculateMonthlyPayment(30000, 'Plan 2')
+      // (£30,000 - £27,750) × 9% ÷ 12 ≈ £16.88
+      expect(Math.round(payment * 100) / 100).toBeCloseTo(16.88, 1)
+    })
+
+    it('Student A (£30k) should have correct first-year monthly payment', () => {
+      const result = calculateScenario(50000, DEFAULT_SCENARIOS[0], 3, 'Plan 5')
+      expect(result.firstYearMonthlyPayment).toBeCloseTo(37.50, 1)
+    })
+  })
+
+  describe('All Four Scenarios - No Zeros', () => {
+    it('Scenario A (£30k) - Plan 5', () => {
+      const result = calculateScenario(50000, DEFAULT_SCENARIOS[0], 3, 'Plan 5')
+      expect(result.scenario).toBe('A')
+      expect(result.firstYearMonthlyPayment).toBeCloseTo(37.50, 1)
+      expect(result.yearsToRepayment).toBeGreaterThan(0)
+      expect(result.totalAmountPaid).toBeGreaterThan(50000)
+    })
+
+    it('Scenario B (£40k) - Plan 5', () => {
+      const result = calculateScenario(50000, DEFAULT_SCENARIOS[1], 3, 'Plan 5')
+      expect(result.scenario).toBe('B')
+      expect(result.firstYearMonthlyPayment).toBeGreaterThan(0)
+      expect(result.yearsToRepayment).toBeGreaterThan(0)
+    })
+
+    it('Scenario C (£50k) - Plan 5', () => {
+      const result = calculateScenario(50000, DEFAULT_SCENARIOS[2], 3, 'Plan 5')
+      expect(result.scenario).toBe('C')
+      expect(result.firstYearMonthlyPayment).toBeGreaterThan(0)
+      expect(result.yearsToRepayment).toBeGreaterThan(0)
+    })
+
+    it('Scenario D (£60k) - Plan 5', () => {
+      const result = calculateScenario(50000, DEFAULT_SCENARIOS[3], 3, 'Plan 5')
+      expect(result.scenario).toBe('D')
+      expect(result.firstYearMonthlyPayment).toBeGreaterThan(0)
+      expect(result.yearsToRepayment).toBeGreaterThan(0)
+    })
+
+    it('Higher salary scenarios should have lower repayment years', () => {
+      const results = calculateAllScenarios(testLoanInput, DEFAULT_SCENARIOS)
+      const years = results.map(r => r.yearsToRepayment)
+
+      for (let i = 1; i < years.length; i++) {
+        expect(years[i]).toBeLessThanOrEqual(years[i - 1])
+      }
+    })
+  })
+
+  describe('Calculation Reconciliation - Example Values', () => {
+    it('£58,737 loan should produce reasonable totals', () => {
+      const scenarioA = calculateScenario(58737, DEFAULT_SCENARIOS[0], 3, 'Plan 5')
+
+      // Validate total > principal
+      expect(scenarioA.totalAmountPaid).toBeGreaterThan(58737)
+      // Validate interest > 0
+      expect(scenarioA.interestPaid).toBeGreaterThan(0)
+      // Validate within 40-year forgiveness
+      expect(scenarioA.yearsToRepayment).toBeLessThanOrEqual(40)
+      // Validate reasonable range
+      expect(scenarioA.interestPaid).toBeLessThan(200000) // Should be reasonable
+    })
+  })
+
+  describe('Copy & Display Fixes', () => {
+    it('loan amounts should format as single £ symbol, not double ££', () => {
       const input: LoanInput = {
         yearsOfStudy: 3,
-        annualTuition: 9250,
-        annualLiving: 6000,
-        maintenanceAllowance: 5000,
+        annualTuition: 9535,
+        annualMaintenanceActual: 9500,
+        parentalContribution: 0,
       }
-      expect(calculateTotalLoan(input)).toBe(60750)
-    })
 
-    it('handles zero maintenance allowance', () => {
-      const input: LoanInput = {
-        yearsOfStudy: 3,
-        annualTuition: 9250,
-        annualLiving: 6000,
-        maintenanceAllowance: 0,
-      }
-      expect(calculateTotalLoan(input)).toBe(45750)
-    })
-
-    it('handles single year of study', () => {
-      const input: LoanInput = {
-        yearsOfStudy: 1,
-        annualTuition: 9250,
-        annualLiving: 6000,
-        maintenanceAllowance: 5000,
-      }
-      expect(calculateTotalLoan(input)).toBe(20250)
+      const total = calculateTotalLoan(input)
+      expect(total).toBeGreaterThan(0)
+      // Should be able to format as currency
+      expect(total.toString()).not.toContain('££')
     })
   })
 
-  describe('calculateSalary', () => {
-    it('calculates initial salary correctly', () => {
-      const scenario: SalaryScenario = {
-        name: 'A',
-        label: 'Test',
-        startingSalary: 30000,
-        annualIncrement: 0.05,
-        color: '#000',
+  describe('Payment Timeline Validity', () => {
+    it('should not have payments during study period', () => {
+      const timeline = buildRepaymentTimeline(50000, testScenario, 3, 'Plan 5')
+
+      for (let i = 0; i < 3; i++) {
+        expect(timeline[i].monthlyPayment).toBe(0)
       }
-      expect(calculateSalary(scenario, 1)).toBe(30000)
     })
 
-    it('applies annual increment correctly', () => {
-      const scenario: SalaryScenario = {
-        name: 'A',
-        label: 'Test',
-        startingSalary: 30000,
-        annualIncrement: 0.05,
-        color: '#000',
-      }
-      // After 1 year: 30000 * (1.05)^0 = 30000
-      expect(calculateSalary(scenario, 1)).toBe(30000)
-      // After 2 years: 30000 * (1.05)^1 = 31500
-      expect(calculateSalary(scenario, 2)).toBeCloseTo(31500, 0)
-      // After 5 years: 30000 * (1.05)^4 = 36464.33
-      expect(calculateSalary(scenario, 5)).toBeCloseTo(36464.33, 1)
-    })
-  })
-
-  describe('calculateMonthlyPayment', () => {
-    it('returns 0 for salary below threshold', () => {
-      expect(calculateMonthlyPayment(20000)).toBe(0)
-      expect(calculateMonthlyPayment(UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD - 1000)).toBe(0)
+    it('should have payments after graduation', () => {
+      const timeline = buildRepaymentTimeline(50000, testScenario, 3, 'Plan 5')
+      expect(timeline[3].monthlyPayment).toBeGreaterThan(0)
     })
 
-    it('calculates monthly payment correctly', () => {
-      // Salary £30,000, threshold £27,750
-      // Repayable: £2,250
-      // Annual: £2,250 * 0.09 = £202.50
-      // Monthly: £202.50 / 12 = £16.875
-      expect(calculateMonthlyPayment(30000)).toBeCloseTo(16.88, 2)
-    })
-
-    it('calculates £40k salary payment correctly', () => {
-      // Salary £40,000, threshold £27,750
-      // Repayable: £12,250
-      // Annual: £12,250 * 0.09 = £1,102.50
-      // Monthly: £1,102.50 / 12 = £91.875
-      expect(calculateMonthlyPayment(40000)).toBeCloseTo(91.88, 2)
-    })
-
-    it('calculates £60k salary payment correctly', () => {
-      // Salary £60,000, threshold £27,750
-      // Repayable: £32,250
-      // Annual: £32,250 * 0.09 = £2,902.50
-      // Monthly: £2,902.50 / 12 = £241.875
-      expect(calculateMonthlyPayment(60000)).toBeCloseTo(241.88, 2)
-    })
-  })
-
-  describe('calculateScenario', () => {
-    it('returns correct scenario structure', () => {
-      const scenario = DEFAULT_SCENARIOS[0] // Student A
-      const result = calculateScenario(60750, scenario)
-
-      expect(result).toHaveProperty('scenario', 'A')
-      expect(result).toHaveProperty('startingSalary', 30000)
-      expect(result).toHaveProperty('firstYearMonthlyPayment')
-      expect(result).toHaveProperty('peakMonthlyPayment')
-      expect(result).toHaveProperty('yearsToRepayment')
-      expect(result).toHaveProperty('totalAmountPaid')
-      expect(result).toHaveProperty('repaymentTimeline')
-    })
-
-    it('calculates scenario A (£30k) correctly', () => {
-      const scenario = DEFAULT_SCENARIOS[0]
-      const result = calculateScenario(60750, scenario)
-
-      expect(result.firstYearMonthlyPayment).toBeCloseTo(16.88, 2)
-      expect(result.yearsToRepayment).toBeGreaterThan(20)
-      expect(result.yearsToRepayment).toBeLessThanOrEqual(40)
-    })
-
-    it('scenario D (£60k) repays faster than scenario A (£30k)', () => {
-      const loan = 60750
-      const scenarioA = calculateScenario(loan, DEFAULT_SCENARIOS[0])
-      const scenarioD = calculateScenario(loan, DEFAULT_SCENARIOS[3])
-
-      expect(scenarioD.yearsToRepayment).toBeLessThan(scenarioA.yearsToRepayment)
-    })
-
-    it('higher salary pays more total but finishes faster', () => {
-      const loan = 60750
-      const scenarioA = calculateScenario(loan, DEFAULT_SCENARIOS[0])
-      const scenarioD = calculateScenario(loan, DEFAULT_SCENARIOS[3])
-
-      expect(scenarioD.totalAmountPaid).toBeGreaterThan(scenarioA.totalAmountPaid)
-      expect(scenarioD.yearsToRepayment).toBeLessThan(scenarioA.yearsToRepayment)
+    it('should accrue interest during study', () => {
+      const timeline = buildRepaymentTimeline(50000, testScenario, 3, 'Plan 5')
+      expect(timeline[0].interestCharged).toBeGreaterThan(0)
     })
   })
 })

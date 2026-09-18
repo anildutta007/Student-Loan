@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import type { UserInput, LivingSituation } from '@types/index'
-import { LIVING_SITUATION_OPTIONS } from '@utils/constants'
+import type { UserInput, LivingSituation, StudentLoanPlan } from '@types/index'
+import { LIVING_SITUATION_OPTIONS, PLAN_2, PLAN_5 } from '@utils/constants'
 import { calculateMaintenanceAllowance, formatCurrency } from '@utils/calculations'
 import { UK_LOAN_SYSTEM } from '@utils/constants'
 import Button from '@components/common/Button'
@@ -20,6 +20,8 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
       livingSituation: 'away-other',
       householdIncome: 30000,
       parentalContribution: 0,
+      courseStartYear: 2024,
+      studentLoanPlan: 'Plan 5',
     },
   })
 
@@ -27,6 +29,11 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
   const livingSituation = watch('livingSituation') as LivingSituation
   const householdIncome = watch('householdIncome')
   const yearsOfStudy = watch('yearsOfStudy')
+  const courseStartYear = watch('courseStartYear') as number
+
+  // Determine plan based on course start year
+  const determinedPlan: StudentLoanPlan = courseStartYear >= 2023 ? 'Plan 5' : 'Plan 2'
+  const planConfig = determinedPlan === 'Plan 2' ? PLAN_2 : PLAN_5
 
   // Calculate maintenance allowance based on inputs
   const calculatedMaintenance = useMemo(() => {
@@ -34,8 +41,8 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
     return calculateMaintenanceAllowance(householdIncome, livingSituation)
   }, [householdIncome, livingSituation])
 
-  // Calculate loan amounts
-  const annualTuition = UK_LOAN_SYSTEM.TUITION_FEE_ANNUAL
+  // Calculate loan amounts using selected plan
+  const annualTuition = parseFloat(planConfig.TUITION_FEE_ANNUAL as any)
   const annualMaintenance = calculatedMaintenance
   const maxLoanAvailable = (annualTuition + annualMaintenance) * yearsOfStudy
   const tuitionTotal = annualTuition * yearsOfStudy
@@ -53,6 +60,8 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
       ...data,
       parentalContribution,
       annualMaintenanceActual: calculatedMaintenance,
+      studentLoanPlan: determinedPlan,
+      courseStartYear,
     }
     onSubmit(updatedInput)
   }
@@ -69,6 +78,55 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
       </div>
 
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        {/* Student Loan Plan Selection */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <label className="block text-sm font-medium text-gray-900 mb-3">
+            📅 When did/will your child's course start?
+          </label>
+          <div className="space-y-3">
+            <label className="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-white transition-colors">
+              <input
+                type="radio"
+                value={2020}
+                {...register('courseStartYear', {
+                  required: 'Please select course start year',
+                  valueAsNumber: true
+                })}
+                className="w-4 h-4 mt-1"
+              />
+              <div className="ml-3">
+                <p className="font-medium text-gray-900">September 2012 - July 2023</p>
+                <p className="text-xs text-gray-600">Plan 2 (Threshold: £27,750 • Interest: RPI + 3% • 30-year forgiveness)</p>
+              </div>
+            </label>
+
+            <label className="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-white transition-colors">
+              <input
+                type="radio"
+                value={2024}
+                {...register('courseStartYear', {
+                  required: 'Please select course start year',
+                  valueAsNumber: true
+                })}
+                className="w-4 h-4 mt-1"
+              />
+              <div className="ml-3">
+                <p className="font-medium text-gray-900">August 2023 onwards</p>
+                <p className="text-xs text-gray-600">Plan 5 (Threshold: £25,000 • Interest: RPI only • 40-year forgiveness)</p>
+              </div>
+            </label>
+          </div>
+
+          <div className="mt-3 p-3 bg-white rounded border border-blue-100">
+            <p className="text-sm font-semibold text-blue-900 mb-1">📌 Selected: {determinedPlan}</p>
+            <p className="text-xs text-blue-800">
+              {determinedPlan === 'Plan 2'
+                ? '💷 Repayment threshold: £27,750 | Interest: RPI + 3% | Forgiveness: 30 years'
+                : '💷 Repayment threshold: £25,000 | Interest: RPI only | Forgiveness: 40 years'}
+            </p>
+          </div>
+        </div>
+
         {/* Line 1: Years of Study & Household Income */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Years of Study */}
@@ -232,8 +290,11 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
 
         {/* Information Box */}
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900">
-            <strong>ℹ️ Note:</strong> We calculate the total loan amount based on tuition fees (£{formatCurrency(annualTuition)}/year for 2026-27) plus your eligible maintenance allowance, minus your parental contribution. Then we'll show you 4 salary scenarios with expected monthly repayment amounts.
+          <p className="text-sm text-blue-900 mb-2">
+            <strong>ℹ️ Note:</strong> We calculate the total loan based on tuition fees (£{Math.round(annualTuition)}/year for 2026-27) plus your eligible maintenance allowance, minus your parental contribution. Using <strong>{determinedPlan}</strong> repayment terms.
+          </p>
+          <p className="text-xs text-blue-800">
+            Then we'll show you 4 salary scenarios (£30k-£60k) with expected monthly repayments based on your selected plan.
           </p>
         </div>
 

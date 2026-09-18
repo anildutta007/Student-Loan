@@ -1,21 +1,51 @@
-import type { SalaryScenario, MaintenanceLimit } from '@types/index'
+import type { SalaryScenario, MaintenanceLimit, StudentLoanPlan } from '@types/index'
 
 /**
- * UK Student Loan System Constants (Plan 2)
- * Based on 2026/27 rates
- * Sources: UK Government Student Finance & Universities UK
+ * UK Student Loan Plan 2 (Sept 2012 - July 2023)
+ * Sources: UK Government Student Finance & Student Loans Company
  */
-export const UK_LOAN_SYSTEM = {
-  TUITION_FEE_ANNUAL: 9535,           // Standard England fee (2026/27) - increased from £9,250
-  REPAYMENT_THRESHOLD: 25000,         // New threshold from April 2026 (Plan 2) - reduced from £27,750
+export const PLAN_2: Record<string, number | string> = {
+  PLAN_NAME: 'Plan 2',
+  TUITION_FEE_ANNUAL: 9250,           // Standard fee cap during Plan 2 era
+  REPAYMENT_THRESHOLD: 27750,         // Plan 2 threshold
   REPAYMENT_RATE: 0.09,               // 9% of income above threshold
-  INTEREST_RATE: 0.045,               // RPI (4.5% for 2026/27)
-  INTEREST_DURING_STUDY: 0.045,       // Interest while studying (RPI)
-  MAX_REPAYMENT_YEARS: 40,            // Forgiveness after 40 years
-  GRACE_PERIOD_YEARS: 0,              // No grace period
-  MAINTENANCE_INCOME_THRESHOLD: 25000, // Income threshold for maintenance taper
-  MAINTENANCE_TAPER_DIVISOR: 6.36,    // ~£1 reduction per £6.36 of income above threshold
+  INTEREST_RATE: 0.075,               // RPI + 3% (4.5% RPI + 3% = 7.5% for 2026/27 example)
+  INTEREST_DURING_STUDY: 0.075,       // RPI + 3% while studying
+  MAX_REPAYMENT_YEARS: 30,            // Forgiveness after 30 years
+  GRACE_PERIOD_YEARS: 0,
+  MAINTENANCE_INCOME_THRESHOLD: 25000,
+  MAINTENANCE_TAPER_DIVISOR: 6.36,
 } as const
+
+/**
+ * UK Student Loan Plan 5 (August 2023 onwards)
+ * New terms with lower threshold and RPI-only interest
+ * Sources: UK Government Student Finance & Student Loans Company
+ */
+export const PLAN_5: Record<string, number | string> = {
+  PLAN_NAME: 'Plan 5',
+  TUITION_FEE_ANNUAL: 9535,           // Standard fee (2026/27)
+  REPAYMENT_THRESHOLD: 25000,         // Plan 5 reduced threshold
+  REPAYMENT_RATE: 0.09,               // 9% of income above threshold
+  INTEREST_RATE: 0.045,               // RPI only (4.5% for 2026/27)
+  INTEREST_DURING_STUDY: 0.045,       // RPI only while studying
+  MAX_REPAYMENT_YEARS: 40,            // Forgiveness after 40 years
+  GRACE_PERIOD_YEARS: 0,
+  MAINTENANCE_INCOME_THRESHOLD: 25000,
+  MAINTENANCE_TAPER_DIVISOR: 6.36,
+} as const
+
+/**
+ * Get plan config by name
+ */
+export const getPlanConfig = (planName: StudentLoanPlan): typeof PLAN_2 => {
+  return planName === 'Plan 2' ? PLAN_2 : PLAN_5
+}
+
+/**
+ * Default plan (Plan 5 for new students from August 2023)
+ */
+export const UK_LOAN_SYSTEM = PLAN_5
 
 /**
  * Maximum years to track repayment (for calculations)
