@@ -104,7 +104,9 @@ const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
             </thead>
             <tbody>
               {results.map((result, idx) => {
-                const fullLoanResult = fullLoanResults?.[idx]
+                // When no parental contribution, results ARE the full loan
+                // When has contribution, use fullLoanResults for comparison
+                const fullLoanResult = fullLoanResults?.[idx] || (hasParentalContribution ? null : result)
                 return (
                   <tr key={result.scenario} className="border-b border-gray-200 hover:bg-yellow-50">
                     <td className="p-3 font-bold text-gray-900 border-r border-gray-300">Student {result.scenario}</td>
