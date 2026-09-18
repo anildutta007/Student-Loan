@@ -21,8 +21,12 @@ const InformationPage: React.FC<InformationPageProps> = ({ onBack }) => {
       <div className="space-y-8">
         {/* How Repayment Works */}
         <section>
-          <h3 className="text-xl font-semibold text-blue-900 mb-4">How Repayment Works</h3>
+          <h3 className="text-xl font-semibold text-blue-900 mb-4">How Plan 5 Repayment Works</h3>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 space-y-4">
+            <div>
+              <p className="font-semibold text-blue-900">📌 Plan 5 (New Students)</p>
+              <p className="text-gray-700">This calculator uses UK Plan 5, which applies to students starting courses from August 2023 onwards</p>
+            </div>
             <div>
               <p className="font-semibold text-blue-900">Repayment Threshold</p>
               <p className="text-gray-700">£25,000 - No repayment if salary is below this amount</p>
@@ -38,7 +42,7 @@ const InformationPage: React.FC<InformationPageProps> = ({ onBack }) => {
             <div>
               <p className="font-semibold text-blue-900">Interest Rate</p>
               <p className="text-gray-700">
-                <strong>4.5% RPI (for this calculator demonstration)</strong>
+                <strong>4.5% RPI (example rate for 2026-27)</strong>
                 <br />
                 <span className="text-sm">⚠️ Important: This rate may be higher or lower in future years depending on actual inflation rates</span>
               </p>
@@ -77,8 +81,11 @@ const InformationPage: React.FC<InformationPageProps> = ({ onBack }) => {
 
         {/* System Assumptions */}
         <section>
-          <h3 className="text-xl font-semibold text-purple-900 mb-4">System Assumptions</h3>
+          <h3 className="text-xl font-semibold text-purple-900 mb-4">Plan 5 System Assumptions</h3>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 space-y-3">
+            <div className="mb-4 pb-4 border-b border-purple-200">
+              <p className="text-sm font-semibold text-purple-900">For new students starting 2026 onwards</p>
+            </div>
             <div className="flex justify-between items-center">
               <p className="font-semibold text-gray-900">Annual Tuition Fee (2026-27)</p>
               <p className="font-bold text-purple-900">£9,535</p>
@@ -93,7 +100,7 @@ const InformationPage: React.FC<InformationPageProps> = ({ onBack }) => {
             </div>
             <div className="flex justify-between items-center">
               <p className="font-semibold text-gray-900">Interest Rate (Example)</p>
-              <p className="font-bold text-purple-900">4.5% RPI</p>
+              <p className="font-bold text-purple-900">4.5% RPI (no +3%)</p>
             </div>
             <div className="flex justify-between items-center">
               <p className="font-semibold text-gray-900">Annual Salary Growth</p>
