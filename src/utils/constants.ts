@@ -1,31 +1,14 @@
-import type { SalaryScenario, MaintenanceLimit, StudentLoanPlan } from '@types/index'
-
-/**
- * UK Student Loan Plan 2 (Sept 2012 - July 2023)
- * Sources: UK Government Student Finance & Student Loans Company
- */
-export const PLAN_2: Record<string, number | string> = {
-  PLAN_NAME: 'Plan 2',
-  TUITION_FEE_ANNUAL: 9250,           // Standard fee cap during Plan 2 era
-  REPAYMENT_THRESHOLD: 27750,         // Plan 2 threshold
-  REPAYMENT_RATE: 0.09,               // 9% of income above threshold
-  INTEREST_RATE: 0.075,               // RPI + 3% (4.5% RPI + 3% = 7.5% for 2026/27 example)
-  INTEREST_DURING_STUDY: 0.075,       // RPI + 3% while studying
-  MAX_REPAYMENT_YEARS: 30,            // Forgiveness after 30 years
-  GRACE_PERIOD_YEARS: 0,
-  MAINTENANCE_INCOME_THRESHOLD: 25000,
-  MAINTENANCE_TAPER_DIVISOR: 6.36,
-} as const
+import type { SalaryScenario, MaintenanceLimit } from '@types/index'
 
 /**
  * UK Student Loan Plan 5 (August 2023 onwards)
- * New terms with lower threshold and RPI-only interest
+ * For new students starting their courses from 2026 onwards
  * Sources: UK Government Student Finance & Student Loans Company
  */
-export const PLAN_5: Record<string, number | string> = {
+export const PLAN_5 = {
   PLAN_NAME: 'Plan 5',
   TUITION_FEE_ANNUAL: 9535,           // Standard fee (2026/27)
-  REPAYMENT_THRESHOLD: 25000,         // Plan 5 reduced threshold
+  REPAYMENT_THRESHOLD: 25000,         // Plan 5 threshold
   REPAYMENT_RATE: 0.09,               // 9% of income above threshold
   INTEREST_RATE: 0.045,               // RPI only (4.5% for 2026/27)
   INTEREST_DURING_STUDY: 0.045,       // RPI only while studying
@@ -36,14 +19,7 @@ export const PLAN_5: Record<string, number | string> = {
 } as const
 
 /**
- * Get plan config by name
- */
-export const getPlanConfig = (planName: StudentLoanPlan): typeof PLAN_2 => {
-  return planName === 'Plan 2' ? PLAN_2 : PLAN_5
-}
-
-/**
- * Default plan (Plan 5 for new students from August 2023)
+ * Default system - Plan 5 for all new students
  */
 export const UK_LOAN_SYSTEM = PLAN_5
 
