@@ -98,7 +98,7 @@ export function buildRepaymentTimeline(
     // Year 4+ (post-grad): use years since graduation for salary growth
     const yearsPostGraduation = Math.max(0, year - yearsOfStudy)
     const salary = yearsPostGraduation > 0 ? calculateSalary(scenario, yearsPostGraduation) : 0
-    const monthlyPayment = calculateMonthlyPayment(salary, plan)
+    const monthlyPayment = calculateMonthlyPayment(salary)
     const annualPayment = monthlyPayment * 12
 
     // Calculate interest on current balance
