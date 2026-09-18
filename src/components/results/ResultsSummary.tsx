@@ -216,7 +216,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
               <tr className="border-b border-blue-200 bg-green-50 hover:bg-green-100">
                 <td className="p-3 font-semibold text-blue-900">With Your Contribution</td>
                 <td className="text-right p-3 text-green-700 font-semibold">
-                  {formatCurrency(totalLoan)}
+                  {formatCurrency(Math.max(0, totalLoan - customContribution))}
                 </td>
                 <td className="text-right p-3 text-green-700 font-semibold">
                   {dynamicMetricsWithContribution.yearsToRepayment}
@@ -234,7 +234,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
               <tr className="border-b border-blue-200 bg-red-50 hover:bg-red-100">
                 <td className="p-3 font-semibold text-blue-900">Without Contribution (Full Loan)</td>
                 <td className="text-right p-3 text-red-700 font-semibold">
-                  {formatCurrency(totalLoan + customContribution)}
+                  {formatCurrency(totalLoan)}
                 </td>
                 <td className="text-right p-3 text-red-700 font-semibold">
                   {dynamicMetricsWithoutContribution.yearsToRepayment}
