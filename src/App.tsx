@@ -179,7 +179,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-sm text-gray-600 text-center">
-            This calculator is based on UK student loan system (Plan 2) and provides estimates only.
+            This calculator is based on UK student loan system (Plan 5) and provides estimates only for students starting 2026+.
             <br />
             Always check official Student Finance England for accurate information.
           </p>

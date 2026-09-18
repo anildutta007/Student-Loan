@@ -38,27 +38,30 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
 
   // Calculate dynamic scenarios based on custom inputs
   // These will recalculate whenever any input changes
+  // fullLoan = current loan (with original contribution) + original contribution
+  const fullLoan = totalLoan + (userInput.parentalContribution || 0)
+
   const dynamicWithContribution = useMemo(() => {
     return buildDynamicRepaymentTimeline({
-      totalLoan: totalLoan + (customContribution > 0 ? customContribution : 0),
+      totalLoan: fullLoan,
       yearsOfStudy: userInput.yearsOfStudy,
       startingSalary: customSalary,
       annualIncrement: 0.05,
       interestRate: customRpiRate,
       parentalContribution: customContribution,
     })
-  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
+  }, [fullLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
 
   const dynamicWithoutContribution = useMemo(() => {
     return buildDynamicFullLoanTimeline({
-      totalLoan: totalLoan + (customContribution > 0 ? customContribution : 0),
+      totalLoan: fullLoan,
       yearsOfStudy: userInput.yearsOfStudy,
       startingSalary: customSalary,
       annualIncrement: 0.05,
       interestRate: customRpiRate,
       parentalContribution: 0,
     })
-  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
+  }, [fullLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
 
   const dynamicMetricsWithContribution = useMemo(() =>
     calculateRepaymentMetrics(dynamicWithContribution),
