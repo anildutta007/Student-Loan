@@ -6,7 +6,6 @@ import { formatCurrency, formatCurrencyDecimal } from '@utils/calculations'
 import { exportScenariosToExcel } from '@utils/exportToExcel'
 import {
   buildDynamicRepaymentTimeline,
-  buildDynamicFullLoanTimeline,
   calculateRepaymentMetrics,
   generateInvestmentProjection,
 } from '@utils/dynamicScenarioCalculations'
@@ -38,30 +37,32 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({
 
   // Calculate dynamic scenarios based on custom inputs
   // These will recalculate whenever any input changes
-  // fullLoan = current loan (with original contribution) + original contribution
-  const fullLoan = totalLoan + (userInput.parentalContribution || 0)
+  // totalLoan = max loan available (from previous calculation)
+  // customContribution = parent's contribution on this page
+  // Loan needed = totalLoan - customContribution
 
   const dynamicWithContribution = useMemo(() => {
+    const loanNeeded = Math.max(0, totalLoan - customContribution)
     return buildDynamicRepaymentTimeline({
-      totalLoan: fullLoan,
-      yearsOfStudy: userInput.yearsOfStudy,
-      startingSalary: customSalary,
-      annualIncrement: 0.05,
-      interestRate: customRpiRate,
-      parentalContribution: customContribution,
-    })
-  }, [fullLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
-
-  const dynamicWithoutContribution = useMemo(() => {
-    return buildDynamicFullLoanTimeline({
-      totalLoan: fullLoan,
+      totalLoan: loanNeeded,
       yearsOfStudy: userInput.yearsOfStudy,
       startingSalary: customSalary,
       annualIncrement: 0.05,
       interestRate: customRpiRate,
       parentalContribution: 0,
     })
-  }, [fullLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
+  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate, customContribution])
+
+  const dynamicWithoutContribution = useMemo(() => {
+    return buildDynamicRepaymentTimeline({
+      totalLoan: totalLoan,
+      yearsOfStudy: userInput.yearsOfStudy,
+      startingSalary: customSalary,
+      annualIncrement: 0.05,
+      interestRate: customRpiRate,
+      parentalContribution: 0,
+    })
+  }, [totalLoan, userInput.yearsOfStudy, customSalary, customRpiRate])
 
   const dynamicMetricsWithContribution = useMemo(() =>
     calculateRepaymentMetrics(dynamicWithContribution),
