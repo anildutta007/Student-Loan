@@ -4,9 +4,8 @@ import type {
   RepaymentOutput,
   YearData,
   LivingSituation,
-  StudentLoanPlan,
 } from '@types/index'
-import { UK_LOAN_SYSTEM, MAX_REPAYMENT_YEARS, MAINTENANCE_LIMITS, getPlanConfig, PLAN_2, PLAN_5 } from './constants'
+import { UK_LOAN_SYSTEM, MAX_REPAYMENT_YEARS, MAINTENANCE_LIMITS } from './constants'
 
 /**
  * Calculate maintenance allowance based on household income and living situation
@@ -57,12 +56,11 @@ export function calculateSalary(
 }
 
 /**
- * Calculate monthly repayment for a given salary and plan
+ * Calculate monthly repayment for a given salary (Plan 5)
  */
-export function calculateMonthlyPayment(salary: number, plan: StudentLoanPlan = 'Plan 5'): number {
-  const planConfig = getPlanConfig(plan)
-  const threshold = parseFloat(planConfig.REPAYMENT_THRESHOLD as any)
-  const rate = parseFloat(planConfig.REPAYMENT_RATE as any)
+export function calculateMonthlyPayment(salary: number): number {
+  const threshold = UK_LOAN_SYSTEM.REPAYMENT_THRESHOLD as number
+  const rate = UK_LOAN_SYSTEM.REPAYMENT_RATE as number
 
   if (salary <= threshold) {
     return 0
@@ -80,17 +78,15 @@ export function calculateMonthlyPayment(salary: number, plan: StudentLoanPlan = 
 export function buildRepaymentTimeline(
   totalLoan: number,
   scenario: SalaryScenario,
-  yearsOfStudy: number,
-  plan: StudentLoanPlan = 'Plan 5'
+  yearsOfStudy: number
 ): YearData[] {
   const timeline: YearData[] = []
   let currentBalance = totalLoan
   let cumulativePaid = 0
   let cumulativeInterest = 0
 
-  const planConfig = getPlanConfig(plan)
-  const REPAYMENT_INTEREST_RATE = parseFloat(planConfig.INTEREST_RATE as any)
-  const STUDY_INTEREST_RATE = parseFloat(planConfig.INTEREST_DURING_STUDY as any)
+  const REPAYMENT_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_RATE as number
+  const STUDY_INTEREST_RATE = UK_LOAN_SYSTEM.INTEREST_DURING_STUDY as number
 
   for (let year = 1; year <= MAX_REPAYMENT_YEARS; year++) {
     // Interest rate depends on whether still studying
@@ -142,15 +138,14 @@ export function buildRepaymentTimeline(
 }
 
 /**
- * Calculate repayment scenario for a specific salary trajectory
+ * Calculate repayment scenario for a specific salary trajectory (Plan 5)
  */
 export function calculateScenario(
   totalLoan: number,
   scenario: SalaryScenario,
-  yearsOfStudy: number,
-  plan: StudentLoanPlan = 'Plan 5'
+  yearsOfStudy: number
 ): RepaymentOutput {
-  const timeline = buildRepaymentTimeline(totalLoan, scenario, yearsOfStudy, plan)
+  const timeline = buildRepaymentTimeline(totalLoan, scenario, yearsOfStudy)
 
   // Find when loan is paid off
   let yearsToRepayment = MAX_REPAYMENT_YEARS
@@ -171,7 +166,7 @@ export function calculateScenario(
     label: scenario.label,
     startingSalary: scenario.startingSalary,
     firstYearMonthlyPayment:
-      Math.round(calculateMonthlyPayment(scenario.startingSalary, plan) * 100) / 100,
+      Math.round(calculateMonthlyPayment(scenario.startingSalary) * 100) / 100,
     peakMonthlyPayment: Math.max(
       ...timeline.map(y => y.monthlyPayment)
     ),
@@ -184,16 +179,15 @@ export function calculateScenario(
 }
 
 /**
- * Calculate all scenarios
+ * Calculate all scenarios (Plan 5)
  */
 export function calculateAllScenarios(
   loanInput: LoanInput,
   scenarios: SalaryScenario[]
 ): RepaymentOutput[] {
   const totalLoan = calculateTotalLoan(loanInput)
-  const plan = loanInput.studentLoanPlan || 'Plan 5'
 
-  return scenarios.map(scenario => calculateScenario(totalLoan, scenario, loanInput.yearsOfStudy, plan))
+  return scenarios.map(scenario => calculateScenario(totalLoan, scenario, loanInput.yearsOfStudy))
 }
 
 /**
