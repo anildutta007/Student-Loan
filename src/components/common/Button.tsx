@@ -27,11 +27,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'font-semibold rounded-lg transition-colors duration-200',
           'focus-visible:outline-2 focus-visible:outline-offset-2',
           'disabled:opacity-50 disabled:cursor-not-allowed',
+          'min-h-touch min-w-touch flex items-center justify-center',
 
-          // Sizes
-          size === 'sm' && 'px-3 py-2 text-sm',
-          size === 'md' && 'px-4 py-2.5 text-base',
-          size === 'lg' && 'px-6 py-3 text-lg',
+          // Sizes - Responsive for mobile
+          size === 'sm' && 'px-2 sm:px-3 py-2 text-xs sm:text-sm',
+          size === 'md' && 'px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base',
+          size === 'lg' && 'px-4 sm:px-6 py-3 text-sm sm:text-lg',
 
           // Variants
           variant === 'primary' && [

@@ -89,9 +89,9 @@ function App() {
       />
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-4 py-4">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex gap-2 sm:gap-4 py-3 sm:py-4 overflow-x-auto">
             <button
               onClick={() => setShowInformation(false)}
               className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
@@ -119,7 +119,7 @@ function App() {
       {/* Progress Bar - Only show for calculator, not information */}
       {!showInformation && (
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:px-6 lg:px-8">
             <ProgressBar currentStep={step} totalSteps={3} />
           </div>
         </div>
@@ -127,9 +127,9 @@ function App() {
 
       {/* Error Message */}
       {error && (
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-900">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4 md:px-6 lg:px-8">
+          <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-xs sm:text-sm text-red-900">
               <strong>Error:</strong> {error}
             </p>
           </div>
@@ -137,7 +137,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8 md:px-6 lg:px-8">
         {showInformation ? (
           <InformationPage onBack={handleBackFromInfo} />
         ) : (
@@ -176,19 +176,19 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-sm text-gray-600 text-center">
+      <footer className="bg-white border-t border-gray-200 mt-8 sm:mt-12">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:px-6 lg:px-8">
+          <p className="text-xs sm:text-sm text-gray-600 text-center">
             This calculator is based on UK student loan system (Plan 5) and provides estimates only for students starting 2026+.
-            <br />
+            <br className="hidden sm:block" />
             Always check official Student Finance England for accurate information.
           </p>
-          <div className="mt-4 text-center">
+          <div className="mt-3 sm:mt-4 text-center">
             <a
               href="https://www.gov.uk/student-finance"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-xs sm:text-sm text-blue-600 hover:text-blue-700"
             >
               Visit Student Finance Official Website →
             </a>

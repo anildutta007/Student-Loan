@@ -67,17 +67,17 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 sm:space-y-6">
         {/* Line 1: Years of Study & Household Income */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Years of Study */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-3">
+            <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">
               How many years will they study?
             </label>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-1 sm:gap-2 flex-wrap">
               {[3, 4, 5].map((year) => (
-                <label key={year} className="flex items-center">
+                <label key={year} className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     value={year}
@@ -87,24 +87,24 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
                     })}
                     className="w-4 h-4"
                   />
-                  <span className="ml-2 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-400 cursor-pointer">
-                    {year} years
+                  <span className="ml-2 px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-200 hover:border-blue-400 active:border-blue-500 transition-colors">
+                    {year}y
                   </span>
                 </label>
               ))}
             </div>
             {errors.yearsOfStudy && (
-              <p className="mt-2 text-sm text-red-600">{errors.yearsOfStudy.message}</p>
+              <p className="mt-2 text-xs text-red-600">{errors.yearsOfStudy.message}</p>
             )}
           </div>
 
           {/* Household Income */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-3">
-              What is your household income?
+            <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">
+              Household income?
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-gray-600">£</span>
+              <span className="absolute left-3 top-2.5 sm:top-3 text-gray-600 text-sm">£</span>
               <input
                 type="number"
                 min="0"
@@ -114,34 +114,34 @@ const CombinedOnboarding: React.FC<CombinedOnboardingProps> = ({ onSubmit, loadi
                   valueAsNumber: true,
                   min: { value: 0, message: 'Income cannot be negative' }
                 })}
-                className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-7 sm:pl-8 pr-3 sm:pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-touch"
                 placeholder="30000"
               />
             </div>
             {errors.householdIncome && (
-              <p className="mt-2 text-sm text-red-600">{errors.householdIncome.message}</p>
+              <p className="mt-2 text-xs text-red-600">{errors.householdIncome.message}</p>
             )}
           </div>
         </div>
 
         {/* Line 2: Living Situation - All options on one horizontal line */}
         <div>
-          <label className="block text-sm font-medium text-gray-900 mb-3">
-            Where will your child be living while studying?
+          <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-2 sm:mb-3">
+            Living situation while studying?
           </label>
-          <div className="space-y-2 md:space-y-0 md:flex md:gap-2 md:flex-wrap">
+          <div className="space-y-2">
             {LIVING_SITUATION_OPTIONS.map((option) => (
               <label
                 key={option.value}
-                className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors md:flex-1 md:min-w-fit"
+                className="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-touch"
               >
                 <input
                   type="radio"
                   value={option.value}
                   {...register('livingSituation', { required: 'Please select living situation' })}
-                  className="w-4 h-4"
+                  className="w-4 h-4 mt-1 flex-shrink-0"
                 />
-                <span className="ml-2 text-sm">
+                <span className="ml-3 text-xs sm:text-sm flex-1">
                   <p className="font-medium text-gray-900">{option.label.split(' - ')[0]}</p>
                   <p className="text-xs text-gray-600">Max {option.description}</p>
                 </span>
