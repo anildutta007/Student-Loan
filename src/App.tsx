@@ -9,12 +9,14 @@ import ResultsSummary from '@components/results/ResultsSummary'
 import InformationPage from '@components/information/InformationPage'
 import ProgressBar from '@components/common/ProgressBar'
 import FeedbackButton from '@components/feedback/FeedbackButton'
+import TipModal from '@components/tip/TipModal'
 
 // Initialize Google Analytics
 ReactGA.initialize('G-Q75B78LH80')
 
 function App() {
   const [showInformation, setShowInformation] = useState(false)
+  const [showTipModal, setShowTipModal] = useState(false)
 
   const {
     step,
@@ -80,13 +82,21 @@ function App() {
     reset()
   }
 
+  const handleTip = () => {
+    ReactGA.event("tip_modal_opened")
+    setShowTipModal(true)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         title="Student Loan Calculator"
         subtitle="Understand your child's monthly repayment after graduation"
         onReset={handleReset}
+        onTip={handleTip}
       />
+
+      <TipModal isOpen={showTipModal} onClose={() => setShowTipModal(false)} />
 
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
