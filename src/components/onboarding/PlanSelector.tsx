@@ -4,7 +4,7 @@ import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 
 interface PlanSelectorProps {
-  onSelectPlan: (planId: string) => void
+  onSelectPlan: (planId: string, isPostGraduate?: boolean) => void
   loading?: boolean
 }
 
@@ -12,8 +12,10 @@ export default function PlanSelector({ onSelectPlan, loading = false }: PlanSele
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [useYearFinder, setUseYearFinder] = useState(false)
   const [startYear, setStartYear] = useState<number | ''>('')
+  const [studentStatus, setStudentStatus] = useState<'current' | 'graduated' | null>(null)
 
   const plans = getAvailablePlans()
+  const isPostGraduatePlan = selectedPlan === 'plan-2' || selectedPlan === 'plan-4'
 
   const handleYearSelect = () => {
     if (startYear && typeof startYear === 'number') {
@@ -26,7 +28,15 @@ export default function PlanSelector({ onSelectPlan, loading = false }: PlanSele
 
   const handleContinue = () => {
     if (selectedPlan) {
-      onSelectPlan(selectedPlan)
+      if (isPostGraduatePlan) {
+        if (!studentStatus) {
+          alert('Please select whether you are currently studying or already repaying')
+          return
+        }
+        onSelectPlan(selectedPlan, studentStatus === 'graduated')
+      } else {
+        onSelectPlan(selectedPlan)
+      }
     }
   }
 
@@ -94,6 +104,65 @@ export default function PlanSelector({ onSelectPlan, loading = false }: PlanSele
               </button>
             ))}
           </div>
+
+          {/* Student Status Selection for Plan 2 & 4 */}
+          {isPostGraduatePlan && (
+            <div className="mb-8 p-6 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Are you still studying?</h3>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => setStudentStatus('current')}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    studentStatus === 'current'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-400 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      studentStatus === 'current' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    }`}>
+                      {studentStatus === 'current' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Currently Studying</p>
+                      <p className="text-xs text-gray-600">I'm still at university or haven't started repayment</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setStudentStatus('graduated')}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    studentStatus === 'graduated'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-400 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${
+                      studentStatus === 'graduated' ? 'border-blue-600 bg-blue-600' : 'border-gray-300'
+                    }`}>
+                      {studentStatus === 'graduated' && <div className="w-2 h-2 bg-white rounded-full" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Already Graduated</p>
+                      <p className="text-xs text-gray-600">I've finished university and am in repayment</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {studentStatus === 'graduated' && (
+                <div className="mt-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
+                  <p className="text-sm text-blue-900">
+                    ✓ You'll see an analysis of your current repayment, interest breakdown, and when your loan will be paid off or forgiven.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </>
       ) : (
         /* Year Finder View */
