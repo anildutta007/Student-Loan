@@ -91,7 +91,7 @@ export default function TipModal({ isOpen, onClose }: TipModalProps) {
         {/* Payment Method Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
           <p className="text-sm text-blue-900">
-            <strong>💳 Payment Methods:</strong> Monzo, Bank Transfer, Card Payments
+            <strong>💳 Payment Methods:</strong> Monzo, Bank Transfer, Debit Card
           </p>
         </div>
 
