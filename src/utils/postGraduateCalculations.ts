@@ -10,6 +10,9 @@ export interface PostGraduateRepaymentResult {
   currentAge: number
   currentLoanBalance: number
   currentSalary: number
+  employmentStatus: string
+  yearsEmployed: number
+  salaryGrowthRate: number
   monthlyPayment: number
   monthlyInterest: number
   monthlyPrincipal: number
@@ -28,6 +31,26 @@ export interface PostGraduateRepaymentResult {
 }
 
 /**
+ * Determine salary growth rate based on experience level
+ */
+function calculateSalaryGrowthRate(employmentStatus: string, yearsEmployed: number): number {
+  // Early career (0-3 years): Higher growth potential
+  if (yearsEmployed <= 3) {
+    return 0.05  // 5% annual growth
+  }
+  // Mid career (3-10 years): Moderate growth
+  if (yearsEmployed <= 10) {
+    return 0.04  // 4% annual growth
+  }
+  // Established (10+ years): Steady growth
+  if (yearsEmployed <= 20) {
+    return 0.03  // 3% annual growth
+  }
+  // Late career (20+ years): Minimal growth
+  return 0.02  // 2% annual growth
+}
+
+/**
  * Calculate post-graduate repayment analysis
  */
 export function calculatePostGraduateRepayment(
@@ -35,7 +58,8 @@ export function calculatePostGraduateRepayment(
   currentLoanBalance: number,
   currentSalary: number,
   planId: string,
-  annualSalaryGrowth: number = 0.03
+  employmentStatus: string = 'employed',
+  yearsEmployed: number = 5
 ): PostGraduateRepaymentResult {
   const plan = getPlanConfig(planId)
   if (!plan) {
@@ -63,6 +87,9 @@ export function calculatePostGraduateRepayment(
     : 0
   const principalPercentage = 100 - interestPercentage
 
+  // Calculate salary growth based on employment experience
+  const salaryGrowthRate = calculateSalaryGrowthRate(employmentStatus, yearsEmployed)
+
   // Build repayment timeline
   const timeline = buildPostGraduateTimeline(
     currentAge,
@@ -70,7 +97,7 @@ export function calculatePostGraduateRepayment(
     currentSalary,
     monthlyPayment,
     planId,
-    annualSalaryGrowth
+    salaryGrowthRate
   )
 
   // Calculate projection
@@ -87,6 +114,9 @@ export function calculatePostGraduateRepayment(
     currentAge,
     currentLoanBalance,
     currentSalary,
+    employmentStatus,
+    yearsEmployed,
+    salaryGrowthRate,
     monthlyPayment,
     monthlyInterest,
     monthlyPrincipal,

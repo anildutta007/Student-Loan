@@ -5,6 +5,8 @@ import Button from '@components/common/Button'
 import Card from '@components/common/Card'
 
 interface PostGraduateInput {
+  employmentStatus: 'employed' | 'self-employed' | 'unemployed' | 'part-time'
+  yearsEmployed?: number
   currentLoanBalance: number
   currentAnnualSalary: number
   currentAge: number
@@ -23,6 +25,8 @@ export default function PostGraduateQuestionnaire({
 }: PostGraduateQuestionnaireProps) {
   const { register, handleSubmit, watch, formState: { errors } } = useForm<PostGraduateInput>({
     defaultValues: {
+      employmentStatus: 'employed',
+      yearsEmployed: 5,
       currentLoanBalance: 0,
       currentAnnualSalary: 30000,
       currentAge: 25,
@@ -33,6 +37,8 @@ export default function PostGraduateQuestionnaire({
   const currentAge = watch('currentAge')
   const loanBalance = watch('currentLoanBalance')
   const salary = watch('currentAnnualSalary')
+  const employmentStatus = watch('employmentStatus')
+  const yearsEmployed = watch('yearsEmployed')
 
   // Calculate current monthly payment
   const monthlyPayment = useMemo(() => {
@@ -114,6 +120,52 @@ export default function PostGraduateQuestionnaire({
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Employment Status */}
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2 sm:mb-3">
+            Employment Status
+          </label>
+          <select
+            {...register('employmentStatus', {
+              required: 'Please select your employment status',
+            })}
+            className="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-touch"
+          >
+            <option value="employed">Employed (Full-time)</option>
+            <option value="part-time">Employed (Part-time)</option>
+            <option value="self-employed">Self-Employed</option>
+            <option value="unemployed">Unemployed / Not Working</option>
+          </select>
+          {errors.employmentStatus && (
+            <p className="mt-2 text-xs text-red-600">{errors.employmentStatus.message}</p>
+          )}
+        </div>
+
+        {/* Years Employed */}
+        {employmentStatus !== 'unemployed' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2 sm:mb-3">
+              How many years have you been {employmentStatus === 'self-employed' ? 'self-employed' : 'employed'}?
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="50"
+              step="0.5"
+              {...register('yearsEmployed', {
+                valueAsNumber: true,
+                min: { value: 0, message: 'Cannot be negative' }
+              })}
+              className="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-touch"
+              placeholder="e.g., 5"
+            />
+            {errors.yearsEmployed && (
+              <p className="mt-2 text-xs text-red-600">{errors.yearsEmployed.message}</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500">This helps us estimate salary growth</p>
+          </div>
+        )}
+
         {/* Current Loan Balance */}
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2 sm:mb-3">

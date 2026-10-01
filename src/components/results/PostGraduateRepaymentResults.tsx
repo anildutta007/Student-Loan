@@ -144,6 +144,21 @@ export default function PostGraduateRepaymentResults({
           </div>
 
           <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <span className="text-gray-700">Employment Status</span>
+            <span className="font-bold text-gray-900 capitalize">{result.employmentStatus}</span>
+          </div>
+
+          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <span className="text-gray-700">Years Employed</span>
+            <span className="font-bold text-gray-900">{result.yearsEmployed} years</span>
+          </div>
+
+          <div className="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="text-gray-700">Projected Salary Growth</span>
+            <span className="font-bold text-blue-900">{(result.salaryGrowthRate * 100).toFixed(1)}% annually</span>
+          </div>
+
+          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
             <span className="text-gray-700">Current Annual Salary</span>
             <span className="font-bold text-gray-900">£{result.currentSalary.toLocaleString()}</span>
           </div>
