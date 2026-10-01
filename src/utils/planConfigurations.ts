@@ -42,9 +42,9 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
   'plan-5': {
     id: 'plan-5',
     name: 'Plan 5',
-    label: 'Plan 5 (2026+)',
-    description: 'Current plan for students starting 2026 onwards',
-    yearStarted: 2026,
+    label: 'Plan 5 (2023+)',
+    description: 'Current plan for students starting 1 August 2023 onwards (England & Wales)',
+    yearStarted: 2023,
     yearEnded: null,
     active: true,
 
@@ -70,10 +70,10 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
   'plan-4': {
     id: 'plan-4',
     name: 'Plan 4',
-    label: 'Plan 4 (2016-2020)',
-    description: 'For students who started university 2016-2020',
-    yearStarted: 2016,
-    yearEnded: 2020,
+    label: 'Plan 4 (Scotland only)',
+    description: 'For students in Scotland. Not available for England/Wales students.',
+    yearStarted: 2000,
+    yearEnded: null,
     active: false,
 
     tuitionFeeAnnual: 9250,
@@ -91,18 +91,18 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maintenanceIncomeThreshold: 25000,
     maintenanceTaperDivisor: 8.94,
 
-    infoBoxTitle: 'Plan 4 Details',
-    infoBoxContent: 'Tuition loans up to £9,250/year. Higher interest rate (6% inflation + 3%). Loans forgiven after 30 years.',
-    warningMessage: 'Interest rates and thresholds differ from current Plan 5. Check Student Finance England for exact rates.',
+    infoBoxTitle: 'Plan 4 (Scotland Only)',
+    infoBoxContent: 'This plan is for students who applied to Student Awards Agency Scotland (SAAS) only. Not available for England/Wales students.',
+    warningMessage: '⚠️ This plan is NOT available for England/Wales students. If you studied in England or Wales, please select Plan 1, 2, or 5.',
   },
 
   'plan-2': {
     id: 'plan-2',
     name: 'Plan 2',
-    label: 'Plan 2 (2012-2015)',
-    description: 'For students who started university 2012-2015',
+    label: 'Plan 2 (2012-2023)',
+    description: 'For students who started university between 1 September 2012 and 31 July 2023 (England & Wales)',
     yearStarted: 2012,
-    yearEnded: 2015,
+    yearEnded: 2023,
     active: false,
 
     tuitionFeeAnnual: 9000,
