@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-import { StatusBar } from 'expo-status-bar'
 import ReactGA from 'react-ga4'
 import Header from '@components/layout/Header'
 import PlanSelector from '@components/onboarding/PlanSelector'
