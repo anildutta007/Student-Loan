@@ -80,7 +80,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maxTuitionLoan: 9250,
     maintenanceLoanAvailable: true,
 
-    repaymentThreshold: 33795,
+    repaymentThreshold: 25000,
     repaymentRate: 0.09,
     interestRateStudying: 0.041,
     interestRatePostGraduation: 0.041,
@@ -109,7 +109,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maxTuitionLoan: 9000,
     maintenanceLoanAvailable: true,
 
-    repaymentThreshold: 29385,
+    repaymentThreshold: 21000,
     repaymentRate: 0.09,
     interestRateStudying: 0.06,
     interestRatePostGraduation: 0.041,
@@ -138,7 +138,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maxTuitionLoan: 3375,
     maintenanceLoanAvailable: true,
 
-    repaymentThreshold: 26900,
+    repaymentThreshold: 17495,
     repaymentRate: 0.09,
     interestRateStudying: 0,
     interestRatePostGraduation: 0.041,
