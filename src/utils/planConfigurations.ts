@@ -54,8 +54,8 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
 
     repaymentThreshold: 25000,
     repaymentRate: 0.09,
-    interestRateStudying: 0.041,
-    interestRatePostGraduation: 0.041,
+    interestRateStudying: 0.045,
+    interestRatePostGraduation: 0.045,
 
     maxRepaymentYears: 40,
     gracePeriodYears: 0,
@@ -64,7 +64,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maintenanceTaperDivisor: 6.36,
 
     infoBoxTitle: 'Plan 5 Details',
-    infoBoxContent: 'Lowest repayment threshold (£25k) with 9% repayment rate. Fixed 4.1% interest. Loans forgiven after 40 years.',
+    infoBoxContent: 'Lower repayment threshold (£25k) with 9% repayment rate. RPI-only interest. Loans forgiven after 40 years.',
   },
 
   'plan-4': {
@@ -82,8 +82,8 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
 
     repaymentThreshold: 25000,
     repaymentRate: 0.09,
-    interestRateStudying: 0.041,
-    interestRatePostGraduation: 0.041,
+    interestRateStudying: 0.06,
+    interestRatePostGraduation: 0.06,
 
     maxRepaymentYears: 30,
     gracePeriodYears: 0,
@@ -111,8 +111,8 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
 
     repaymentThreshold: 21000,
     repaymentRate: 0.09,
-    interestRateStudying: 0.06,
-    interestRatePostGraduation: 0.041,
+    interestRateStudying: 0.04,
+    interestRatePostGraduation: 0.06,
 
     maxRepaymentYears: 30,
     gracePeriodYears: 0,
@@ -121,8 +121,8 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     maintenanceTaperDivisor: 8.94,
 
     infoBoxTitle: 'Plan 2 Details',
-    infoBoxContent: 'Tuition cap £9k. Variable interest while studying (RPI + 3%, capped 6%). Fixed 4.1% after graduation (up to 6% for higher earners). Loans forgiven after 30 years.',
-    warningMessage: 'Variable interest rates apply. Post-graduation rate varies by income (4.1%-6%). Check Student Finance England for latest information.',
+    infoBoxContent: 'Lowest tuition cap (£9k). Variable interest rate (RPI + up to 3%). Lower repayment threshold (£21k). Loans forgiven after 30 years.',
+    warningMessage: 'Variable interest rates apply. Current rates may differ. Check Student Finance England for latest information.',
   },
 
   'plan-1': {
@@ -141,7 +141,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     repaymentThreshold: 17495,
     repaymentRate: 0.09,
     interestRateStudying: 0,
-    interestRatePostGraduation: 0.041,
+    interestRatePostGraduation: 0.044,
 
     maxRepaymentYears: 25,
     gracePeriodYears: 0,
